@@ -1,5 +1,5 @@
-/* Finance on its own, in its own look: one soft gradient from bezel to bezel (sage at the top, rose, mauve, plum at the
-   bottom) and frosted glass over it for everything you read or touch. One warm coral accent. Light sans type throughout.
+/* Finance on its own, in its own look: one soft gradient from bezel to bezel (pale aqua at the top, teal, deep sea-blue
+   at the bottom) and frosted glass over it for everything you read or touch. One warm coral accent. Light sans type throughout.
    Full screen on the iPhone: the gradient runs under the status bar and into every corner. Nothing scrolls behind
    the Dynamic Island, so iOS's own blur up there has nothing to smear; at the bottom the list runs into the corners. */
 :root,:root[data-theme="dark"],:root[data-wall][data-theme="dark"]{
@@ -11,14 +11,14 @@
   --qacc:var(--accent); --qink:#fff; --qdim:rgba(255,255,255,.7);
   --chrome:#9a8f8a;
   --glass:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.07));
-  --sheet:linear-gradient(180deg,rgba(120,86,100,.72),rgba(70,44,60,.82));
+  --sheet:linear-gradient(180deg,rgba(46,120,130,.74),rgba(14,62,76,.86));
   --blur:blur(26px) saturate(150%);
   --glass-border:rgba(255,255,255,.28); --glass-hi:rgba(255,255,255,.7); --glass-lo:rgba(255,255,255,.18); --sheen:rgba(255,255,255,.12);
   --control:rgba(255,255,255,.14); --panel-hi:rgba(255,255,255,.16); --well:rgba(255,255,255,.1); --hair:rgba(255,255,255,.16);
   --field:rgba(255,255,255,.12); --field-border:rgba(255,255,255,.24); --line:rgba(255,255,255,.4);
-  --solid:#fff; --on-solid:#3a2230;
+  --solid:#fff; --on-solid:#0f3a44;
   --good:#b9f5c9; --warn:#ffd79a; --bad:#ff8a73; --on-bad:#2a0e08;
-  --lift:0 24px 50px -26px rgba(40,10,25,.55); --lift-sm:0 10px 24px -14px rgba(40,10,25,.5);
+  --lift:0 24px 50px -26px rgba(2,30,40,.55); --lift-sm:0 10px 24px -14px rgba(2,30,40,.5);
   --glow:0 0 0 0 transparent; --sel-glow:0 0 0 0 transparent; --halo:none;
   --tile-r:30px}
 
@@ -28,14 +28,14 @@
    height into --appH and the page is sized to it. The page doesn't scroll, so the ground and the sidebar are placed on the
    page itself (absolute), sized to --appH, rather than on the short viewport. */
 :root{--envT:env(safe-area-inset-top,0px);--envB:env(safe-area-inset-bottom,0px)}
-html{height:var(--appH,100%);background:#3a2235}
+html{height:var(--appH,100%);background:#0e3442}
 body{position:relative;height:var(--appH,100%);background:transparent!important}
 #bg{position:absolute;top:0;left:0;right:0;bottom:auto;height:var(--appH,100%);z-index:-1;background:
-  linear-gradient(180deg,#b6b3a2 0,rgba(182,179,162,0) 120px), /* the top edge is exactly the status bar's color (theme-color) */
-  radial-gradient(70% 45% at 85% 8%,rgba(214,226,196,.75),rgba(214,226,196,0) 70%),
-  radial-gradient(60% 40% at 10% 30%,rgba(232,176,170,.55),rgba(232,176,170,0) 70%),
-  radial-gradient(70% 45% at 70% 70%,rgba(255,120,96,.28),rgba(255,120,96,0) 70%),
-  linear-gradient(180deg,#b6b3a2 0%,#b98d93 30%,#946b7d 58%,#5d3d52 82%,#3a2235 100%)}
+  linear-gradient(180deg,#4fa9ad 0,rgba(79,169,173,0) 120px), /* the top edge is exactly the status bar's color (theme-color) */
+  radial-gradient(70% 45% at 85% 8%,rgba(170,240,225,.38),rgba(205,252,238,0) 70%),
+  radial-gradient(60% 40% at 10% 30%,rgba(120,225,235,.55),rgba(120,225,235,0) 70%),
+  radial-gradient(70% 45% at 70% 70%,rgba(60,160,255,.22),rgba(60,160,255,0) 70%),
+  linear-gradient(180deg,#4fa9ad 0%,#3c9ea4 30%,#277f8c 58%,#1f6a7a 82%,#0e3442 100%)}
 #bg .wall,#bg::after,#bg::before{display:none!important}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:2147483000;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .8 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -56,7 +56,7 @@ body[data-auth="out"] #view,.login{min-height:0}
 .link{font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important;color:#fff!important}
 .btn{font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important;border-radius:999px!important;background:rgba(255,255,255,.16);color:#fff;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)!important}
-.btn.solid{background:#fff!important;color:#3a2230!important;box-shadow:none!important}
+.btn.solid{background:#fff!important;color:#0f3a44!important;box-shadow:none!important}
 .circle{border-radius:50%!important;background:rgba(255,255,255,.16)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)!important}
 .fin .fig{color:#fff}
 
@@ -75,11 +75,11 @@ body[data-auth="out"] #view,.login{min-height:0}
   font:600 9.5px/1 var(--font);font-style:normal;background:var(--accent);color:#fff}
 
 /* the sidebar: a glass sheet over the gradient */
-.fa-scrim{position:absolute;top:0;left:0;right:0;height:var(--appH,100%);z-index:20;background:rgba(40,16,30,.28);animation:faFade .2s ease-out}
+.fa-scrim{position:absolute;top:0;left:0;right:0;height:var(--appH,100%);z-index:20;background:rgba(4,32,40,.28);animation:faFade .2s ease-out}
 .fa-side{position:absolute;z-index:21;top:0;height:var(--appH,100%);left:0;width:min(300px,84vw);display:flex;flex-direction:column;gap:6px;
   padding:calc(var(--envT) + 18px) 12px calc(var(--envB) + 18px) max(12px,env(safe-area-inset-left,0px));
-  border-radius:0 36px 36px 0;background:var(--g-sheen),linear-gradient(180deg,rgba(150,120,125,.55),rgba(80,50,68,.7));
-  -webkit-backdrop-filter:blur(30px) saturate(160%);backdrop-filter:blur(30px) saturate(160%);box-shadow:inset -1px 0 0 rgba(255,255,255,.3),30px 0 60px -20px rgba(40,10,25,.6);
+  border-radius:0 36px 36px 0;background:var(--g-sheen),linear-gradient(180deg,rgba(90,175,180,.55),rgba(16,72,86,.74));
+  -webkit-backdrop-filter:blur(30px) saturate(160%);backdrop-filter:blur(30px) saturate(160%);box-shadow:inset -1px 0 0 rgba(255,255,255,.3),30px 0 60px -20px rgba(2,30,40,.6);
   transform:translateX(-102%);transition:transform .3s cubic-bezier(.2,.85,.25,1);visibility:hidden}
 body.menu-on .fa-side{transform:none;visibility:visible}
 @keyframes faFade{from{opacity:0}}
@@ -121,7 +121,7 @@ body.menu-on .fa-fab{visibility:hidden}
   text-align:left;color:#fff;cursor:pointer;
   background:linear-gradient(115deg,rgba(255,255,255,.4),rgba(255,255,255,.12) 45%,rgba(255,255,255,.2));
   -webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 0 0 1px rgba(255,255,255,.4),0 20px 40px -22px rgba(40,10,25,.7)}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 0 0 1px rgba(255,255,255,.4),0 20px 40px -22px rgba(2,30,40,.7)}
 .fin .safe.short{background:radial-gradient(90% 140% at 15% 10%,rgba(255,170,150,.75),rgba(255,107,79,.55) 55%,rgba(228,71,47,.6))}
 .fin .safe-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .fin .safe-lab{font:500 15px/1 var(--font)}
@@ -177,7 +177,7 @@ body.menu-on .fa-fab{visibility:hidden}
 .fin .cat-pill select{appearance:none;-webkit-appearance:none;border:0;background:none;color:inherit;font:inherit;padding:10px 18px 10px 0;cursor:pointer;border-radius:0!important;box-shadow:none!important;
   background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
   background-position:right 4px center,right 0 center;background-size:4px 4px,4px 4px;background-repeat:no-repeat}
-.fin .cat-pill select option{background:#5d3d52;color:#fff}
+.fin .cat-pill select option{background:#1f6a7a;color:#fff}
 .fin .cat-pill:focus-within{box-shadow:inset 0 0 0 2px #fff}
 .fin .txr-ok{margin-left:auto;display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;color:#fff;font:500 14px/1 var(--font);
   background:radial-gradient(80% 80% at 30% 25%,#ff9a80,var(--accent) 60%,var(--accent-2));box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
@@ -197,7 +197,7 @@ body.menu-on .fa-fab{visibility:hidden}
    the sheet is pinned to the real bottom by giving that back. */
 dialog#finSheet{border-radius:36px!important;max-height:calc(var(--appH,100dvh) - var(--envT) - var(--envB) - 24px)!important;
   margin:auto auto calc(var(--envB) + 10px - var(--gapB,0px))!important}
-dialog#finSheet::backdrop{background:rgba(40,16,30,.3)}
+dialog#finSheet::backdrop{background:rgba(4,32,40,.3)}
 dialog#finSheet:focus{outline:none}
 #finSheet .sheet-head .bar h2{font:400 20px/1.2 var(--font)!important;text-transform:none!important;letter-spacing:0!important}
 #finSheet .f-h,#finSheet .lab{color:var(--ink-2)!important}
@@ -217,14 +217,14 @@ dialog#finSheet:focus{outline:none}
     radial-gradient(90% 120% at 100% 100%,rgba(var(--tint),.55),rgba(var(--tint),0) 70%),
     linear-gradient(160deg,rgba(var(--tint),.32),rgba(var(--tint),.1));
   -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 0 0 1px rgba(255,255,255,.34),inset 0 -1px 0 rgba(255,255,255,.12),0 24px 40px -22px rgba(40,10,25,.7)}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 0 0 1px rgba(255,255,255,.34),inset 0 -1px 0 rgba(255,255,255,.12),0 24px 40px -22px rgba(2,30,40,.7)}
 /* a gloss streak across the top of the card */
 .fin .acard::before{content:"";position:absolute;z-index:-1;left:-20%;top:-60%;width:140%;height:90%;border-radius:50%;
   background:radial-gradient(closest-side,rgba(255,255,255,.35),rgba(255,255,255,0));transform:rotate(-8deg);pointer-events:none}
 .fin .acard.r-bills{--tint:150,170,255;order:0}
 .fin .acard.r-spend{--tint:255,170,140;order:1}
 .fin .acard.r-savings{--tint:255,214,170;order:2}
-.fin .acard.r-credit{--tint:60,36,52;order:3}
+.fin .acard.r-credit{--tint:20,48,90;order:3}
 .fin .acard:active{transform:scale(.985)}
 .fin .acard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .fin .acard-name{display:flex;flex-direction:column;gap:4px;font:500 17px/1.2 var(--font);letter-spacing:.01em}
@@ -272,7 +272,7 @@ dialog#finSheet:focus{outline:none}
 .fin .pick select{appearance:none;-webkit-appearance:none;border:0;background:none;color:inherit;font:inherit;padding:11px 16px 11px 0;cursor:pointer;border-radius:0!important;
   background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
   background-position:right 4px center,right 0 center;background-size:4px 4px,4px 4px;background-repeat:no-repeat;box-shadow:none!important;min-height:0}
-.fin .pick select option{background:#5d3d52;color:#fff}
+.fin .pick select option{background:#1f6a7a;color:#fff}
 .fin .pick.money span{color:rgba(255,255,255,.7)}
 .fin .pick.money input{border:0;background:none;color:inherit;font:inherit;width:7ch;padding:11px 0;font-variant-numeric:tabular-nums;border-radius:0!important;box-shadow:none!important}
 .fin .pick.money input:focus{outline:none}
