@@ -1,6 +1,21 @@
 // Finance, on its own: the same records Nerve keeps (Supabase table fin_docs), signed in with the Nerve account.
 // finance.js draws every page; this file is the frame around it: sign-in, the section tabs, taps and the toast.
 (function () {
+  // On an iPhone home-screen app, iOS can shift the page up under the status bar yet report the screen that much shorter,
+  // so anything sized "100%" stops short and leaves a bare strip at the bottom. When the reported height plus the top inset
+  // still fits the screen, that's the shortfall: everything is sized to the full height (--appH) instead.
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)';
+  document.documentElement.appendChild(probe);
+  function fitScreen() {
+    const standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    const top = probe.offsetHeight, short = standalone && innerHeight >= innerWidth && top > 0 && innerHeight + top <= screen.height;
+    document.documentElement.style.setProperty('--appH', (short ? innerHeight + top : innerHeight) + 'px');
+  }
+  fitScreen();
+  addEventListener('resize', fitScreen);
+  addEventListener('orientationchange', () => setTimeout(fitScreen, 250));
+
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
   const $ = s => document.querySelector(s);

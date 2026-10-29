@@ -23,9 +23,12 @@
   --tile-r:30px}
 
 /* the ground: fixed, the whole glass of the phone */
-html{height:100%;background:#6f5462}
-body{height:100%;background:transparent!important}
-#bg{position:fixed;inset:0;z-index:-1;background:
+/* --appH is the real screen height (app.js): iOS reports a home-screen app 62pt short, which left a bare strip at the bottom.
+   Behind everything, the page itself takes the gradient's last color, so nothing can ever show as a separate band. */
+html{height:var(--appH,100%);background:#3a2235}
+body{height:var(--appH,100%);background:transparent!important}
+#bg{position:fixed;top:0;left:0;right:0;bottom:auto;height:max(var(--appH,100lvh),100lvh);z-index:-1;background:
+  linear-gradient(180deg,#b6b3a2 0,rgba(182,179,162,0) 120px), /* the top edge is exactly the status bar's color (theme-color) */
   radial-gradient(70% 45% at 85% 8%,rgba(214,226,196,.75),rgba(214,226,196,0) 70%),
   radial-gradient(60% 40% at 10% 30%,rgba(232,176,170,.55),rgba(232,176,170,0) 70%),
   radial-gradient(70% 45% at 70% 70%,rgba(255,120,96,.28),rgba(255,120,96,0) 70%),
@@ -34,7 +37,7 @@ body{height:100%;background:transparent!important}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:2147483000;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .8 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-.app{position:relative;max-width:1180px;height:100dvh;padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))!important;gap:0;transform:none!important}
+.app{position:relative;max-width:1180px;height:var(--appH,100dvh);padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))!important;gap:0;transform:none!important}
 .fin-scroll{padding:64px 14px calc(env(safe-area-inset-bottom,0px) + 100px)!important;margin:0 -14px!important}
 body[data-auth="out"] #view,.login{min-height:0}
 #view{text-shadow:none}
@@ -68,8 +71,8 @@ body[data-auth="out"] #view,.login{min-height:0}
   font:600 9.5px/1 var(--font);font-style:normal;background:var(--accent);color:#fff}
 
 /* the sidebar: a glass sheet over the gradient */
-.fa-scrim{position:fixed;inset:0;z-index:20;background:rgba(40,16,30,.28);animation:faFade .2s ease-out}
-.fa-side{position:fixed;z-index:21;top:0;bottom:0;left:0;width:min(300px,84vw);display:flex;flex-direction:column;gap:6px;
+.fa-scrim{position:fixed;top:0;left:0;right:0;height:var(--appH,100lvh);z-index:20;background:rgba(40,16,30,.28);animation:faFade .2s ease-out}
+.fa-side{position:fixed;z-index:21;top:0;height:var(--appH,100dvh);left:0;width:min(300px,84vw);display:flex;flex-direction:column;gap:6px;
   padding:calc(env(safe-area-inset-top,0px) + 18px) 12px calc(env(safe-area-inset-bottom,0px) + 18px) max(12px,env(safe-area-inset-left,0px));
   border-radius:0 36px 36px 0;background:var(--g-sheen),linear-gradient(180deg,rgba(150,120,125,.55),rgba(80,50,68,.7));
   -webkit-backdrop-filter:blur(30px) saturate(160%);backdrop-filter:blur(30px) saturate(160%);box-shadow:inset -1px 0 0 rgba(255,255,255,.3),30px 0 60px -20px rgba(40,10,25,.6);
@@ -88,13 +91,13 @@ body.menu-on .fa-side{transform:none;visibility:visible}
 .fa-out{margin-top:8px}
 
 /* add, bottom right, coral */
-.fa-fab{position:fixed;z-index:10;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
+.fa-fab{position:fixed;z-index:10;right:max(18px,env(safe-area-inset-right,0px));top:calc(var(--appH,100dvh) - env(safe-area-inset-bottom,0px) - 76px);bottom:auto;
   width:62px;height:62px;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;cursor:pointer;
   background:radial-gradient(80% 80% at 30% 25%,#ff9a80,var(--accent) 55%,var(--accent-2));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 16px 34px -10px rgba(150,30,20,.6)}
 .fa-fab .i{width:26px;height:26px;stroke-width:1.8}
 .fa-fab:active{transform:scale(.94)}
 body.menu-on .fa-fab{visibility:hidden}
-.toast{bottom:calc(env(safe-area-inset-bottom,0px) + 92px)!important;border-radius:22px!important;font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important}
+.toast{bottom:auto!important;top:calc(var(--appH,100dvh) - env(safe-area-inset-bottom,0px) - 136px)!important;border-radius:22px!important;font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important}
 
 /* forms: a glass sheet tinted with the gradient */
 dialog#finSheet{border-radius:36px!important}
@@ -109,7 +112,7 @@ dialog#finSheet::backdrop{background:rgba(40,16,30,.3)}
 .fin-scroll:has(.acct-page){padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)!important}
 .fin .acct-page{max-width:520px;width:100%;gap:28px;margin:0 auto}
 .fin .acards{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:12px;
-  height:min(calc(100dvh - env(safe-area-inset-top,0px) - 64px - env(safe-area-inset-bottom,0px) - 12px),1000px);min-height:440px}
+  height:min(calc(var(--appH,100dvh) - env(safe-area-inset-top,0px) - 64px - env(safe-area-inset-bottom,0px) - 12px),1000px);min-height:440px}
 .fin .acard{--tint:255,255,255;position:relative;overflow:hidden;isolation:isolate;min-height:0;border:0;border-radius:24px;padding:clamp(12px,2.2dvh,20px) 22px;
   display:grid;grid-template-rows:auto 1fr auto auto;text-align:left;color:#fff;cursor:pointer;
   background:
