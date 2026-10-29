@@ -87,6 +87,7 @@ window.POSFinance = function (ctx) {
     const relabel = window.POSRelabel || (x => x);
     for (const r of data) if (S[r.kind]) S[r.kind].push({ ...r.data, ...(r.kind === 'txns' && r.data.merchant ? { merchant: relabel(r.data.merchant) } : {}), id: r.id });
     rerender();
+    if (canSave()) ensureMisc();
     await autoIncome();
     dropStrayExamples();
     await saveMonths();
@@ -854,7 +855,8 @@ window.POSFinance = function (ctx) {
   }
 
   // what counts as spending on a day: every charge out, but not money moved between your accounts or marked "not spending"
-  const spentIn = mk => S.txns.filter(t => isOut(t) && !isTransfer(t) && t.bucketId !== '_none' && inMk(t.at, mk));
+  // only confirmed charges count (a charge waiting to be confirmed has no bucketId yet)
+  const spentIn = mk => S.txns.filter(t => isOut(t) && t.bucketId && !isTransfer(t) && t.bucketId !== '_none' && inMk(t.at, mk));
   // the month as plain boxes, one a day: the more spent, the deeper the color. Today is ringed.
   function heatCal(mk) {
     const [y, m] = mkParts(mk), dim = new Date(y, m + 1, 0).getDate(), lead = new Date(y, m, 1).getDay(), cur = curMk();
@@ -1137,7 +1139,7 @@ window.POSFinance = function (ctx) {
   function vHome() {
     // each account as its card: its name, its number and what's in it, as the bank shows it. Tap one to set the balance.
     // Charges still to sort sit under the cards.
-    const todo = inbox(), accts = sorted(S.accounts.filter(a => !isThing(a)));
+    const accts = sorted(S.accounts.filter(a => !isThing(a)));
     // the spending account leads, wide; bills and savings share a row; the credit card closes it out, wide
     const role = acctRole;
     const card = a => {
@@ -1151,8 +1153,10 @@ window.POSFinance = function (ctx) {
     };
     const cards = accts.length ? `<div class="acards">${accts.map(card).join('')}</div>`
       : `<p class="empty">No accounts yet.</p>${canSave() ? '<div><button type="button" class="btn solid" data-act="fin-form" data-form="account">Add account</button></div>' : ''}`;
-    const appr = todo.length ? `<section class="sec" id="finTodo"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>` : '';
-    return `<div class="fin-page acct-page">${cards}${appr}</div>`;
+    // charges waiting to be confirmed: one button under the cards that opens Activity, so Accounts never scrolls
+    const n = inbox().length;
+    const todo = n ? `<button type="button" class="acct-todo" data-act="fin-sub" data-sub="activity">${ICON.clock}<span>${n} ${n === 1 ? 'charge' : 'charges'} to confirm</span>${ICON.chev}</button>` : '';
+    return `<div class="fin-page acct-page${n ? ' has-todo' : ''}">${cards}${todo}</div>`;
   }
 
   // A list of bills for layouts, filtered. filter.status: 'upcoming' (not paid, due or late this month, or due within
@@ -1505,31 +1509,132 @@ window.POSFinance = function (ctx) {
       ${mk === cur && limits.length ? `<div class="plan-next"><span class="meta">Want to spend less next month? Set ${esc(mkName(mkAdd(cur, 1)))}’s limits now.</span><button type="button" class="btn" data-act="fin-month" data-for="sp" data-mk="${mkAdd(cur, 1)}">Plan ${esc(mkName(mkAdd(cur, 1)))}</button></div>` : ''}</div>`;
   }
 
-  function vActivity() {
-    const all = S.txns.slice().sort((a, b) => b.at - a.at), accounts = sorted(S.accounts);
-    // the accounts, each with its balance over the last few weeks
-    const accts = `<section class="sec"><div class="sec-head"><span class="lab">Accounts</span>${canSave() ? `<button type="button" class="circle" data-act="fin-form" data-form="account" aria-label="Add account">${ICON.plus}</button>` : ''}</div>
-      ${accounts.length ? `<div class="acct-grid">${accounts.map(accountCard).join('')}</div>` : '<p class="empty">No accounts yet. Add checking, savings and your credit card with today’s balance from Regions.</p>'}${mailLine()}</section>`;
-    if (!all.length) return `<div class="fin-page">${accts}<p class="empty">No charges or deposits yet. Tap + to add one.</p></div>`;
-    let h = accts, day = '', rows = '';
-    const flush = () => { if (rows) h += `<section class="sec"><span class="lab">${esc(day)}</span><div class="float list">${rows}</div></section>`; rows = ''; };
-    for (const t of all) {
-      const d = dayFmt.format(t.at);
-      if (d !== day) { flush(); day = d; }
-      const label = bucketLabel(t);
-      const pill = !isOut(t) ? `<span class="pill">${t.payId ? 'Paycheck' : isTransfer(t) ? 'Transfer' : 'Deposit'}</span>` : label ? `<span class="pill">${esc(label)}</span>` : '<span class="pill todo">Needs approval</span>';
-      rows += `<button type="button" class="tx" data-act="fin-form" data-form="charge" data-id="${esc(t.id)}">
-        <span class="name">${esc(t.merchant)}${exTag(t)}</span>
-        <span class="fig md t-amt ${isOut(t) ? '' : 'in'}">${isOut(t) ? '' : '+'}${fmt(t.amount)}</span>
-        <span class="t-sub meta">${esc(timeFmt.format(t.at))} · ${esc(acctLabel(acct(t.accountId)))} ${pill}</span>
-      </button>`;
+  /* ---------- Activity: every charge, newest first. To confirm on top, then a gap, then everything confirmed. ----------
+     Two stages. A charge takes money off its account the moment it lands (acctBalance counts every charge), but it
+     counts toward limits, charts and stats only once it's confirmed: that's when it gets its category (bucketId), and
+     everything that adds up spending reads bucketId. Until then the app's guess, or the category picked on the pill,
+     waits in `pick`. Charges that already had a category before this are confirmed, just as they were. */
+
+  // one flat list of categories, each with its own color: the spending categories, Bills, Miscellaneous, Not spending
+  const CAT_COLORS = { 'fast food': '#ff8a3d', gas: '#3fa9ff', 'gas station snacks': '#ffcc3d', groceries: '#3ddc84', 'fun money': '#ff5fa8',
+    bills: '#b38cff', miscellaneous: '#a8b0ba', 'not spending': '#e8e4ea' };
+  const SPARE_COLORS = ['#2ee6d6', '#ff6b6b', '#7c8cff', '#c6f04a', '#f78fff', '#ffa94d'];
+  const catColor = name => CAT_COLORS[String(name).toLowerCase()] || SPARE_COLORS[[...String(name)].reduce((h, c) => h + c.charCodeAt(0), 0) % SPARE_COLORS.length];
+  const miscBucket = () => kind('limit').find(b => /^misc/i.test(b.name)) || null;
+  const MISC = () => (miscBucket() || { id: '_misc' }).id;
+  function cats() {
+    const spend = kind('limit').filter(b => !/^misc/i.test(b.name)).map(b => ({ value: b.id, label: b.name, color: catColor(b.name) }));
+    return [...spend, { value: 'bills', label: 'Bills', color: catColor('bills') }, { value: MISC(), label: 'Miscellaneous', color: catColor('miscellaneous') },
+      { value: '_none', label: 'Not spending', color: catColor('not spending') }];
+  }
+  const catOf = value => cats().find(c => c.value === value) || cats().find(c => c.value === MISC());
+  // a confirmed charge's category on the pill (a bill shows as Bills)
+  const catValue = t => (billIdOf(t.bucketId) ? 'bills' : t.bucketId);
+
+  // The guess for a new charge: what you put this place under last time, else the rules, else Miscellaneous.
+  // QT and other stations print "Outside" at the pump and "Inside" in the store; with neither, $20 or more is gas.
+  const byName = re => (kind('limit').find(b => re.test(b.name)) || {}).id || null;
+  const RULES = [
+    [t => /\boutside\b/i.test(t.merchant), () => byName(/^gas$/i)],
+    [t => /\binside\b/i.test(t.merchant), () => byName(/station|snack/i)],
+    [t => /\b(spinx|shell|exxon|bp|circle ?k|racetrac|marathon|sunoco|chevron|wawa|sheetz|speedway|murphy|valero|citgo)\b/i.test(t.merchant), t => byName(t.amount >= 2000 ? /^gas$/i : /station|snack/i)],
+    [t => /mcdonald|chick-?fil|cook ?out|culver|chipotle|whataburger|wendy|taco bell|burger king|sonic drive|zaxby|bojangle|arby|popeye|subway|kfc|panera|five guys|jersey mike|starbucks|dunkin|domino|pizza hut|papa john|waffle house|cane'?s|wingstop/i.test(t.merchant), () => byName(/fast food/i)],
+    [t => /publix|aldi|kroger|ingles|food lion|lidl|trader joe|harris teeter|whole foods|sprouts|bi-?lo/i.test(t.merchant), () => byName(/grocer/i)],
+  ];
+  function guessFor(t) {
+    if (t.pick) return t.pick;
+    const learned = usualFor(t);
+    if (learned) return learned.id;
+    if (isTransfer(t)) return '_none';
+    if (billsNear(t).length) return 'bills';
+    for (const [test, cat] of RULES) if (test(t)) { const c = cat(t); if (c) return c; }
+    return MISC();
+  }
+  // a pill value as the category to save: Bills becomes the bill this charge pays (null when none fits)
+  function resolveCat(value, t) {
+    if (value !== 'bills') return value;
+    const b = billsNear(t)[0] || S.bills.find(x => namedIn(x, t));
+    return b ? 'bill:' + b.id : null;
+  }
+  const toConfirm = () => inbox();
+
+  function txRow(t) {
+    const out = isOut(t), pending = out && !t.bucketId;
+    const a = acct(t.accountId), where = a ? acctLabel(a) : 'Removed account';
+    if (!out) {
+      const kindName = t.payId && t.payId !== '_no' ? 'Paycheck' : isTransfer(t) ? 'Transfer in' : 'Deposit';
+      return `<div class="txr is-in" data-txn="${esc(t.id)}">
+        <div class="txr-top"><button type="button" class="txr-name" data-act="fin-form" data-form="charge" data-id="${esc(t.id)}">${esc(t.merchant || 'Deposit')}</button><span class="txr-amt in">+${fmt(t.amount)}</span></div>
+        <div class="txr-meta">${esc(timeFmt.format(t.at))} · ${esc(where)}</div>
+        <div class="txr-ctl"><span class="cat-tag" style="--c:${catColor('not spending')}"><i></i>${kindName}</span></div>
+      </div>`;
     }
-    flush();
-    return `<div class="fin-page">${h}</div>`;
+    const value = pending ? guessFor(t) : catValue(t), c = catOf(value);
+    const opts = cats().map(x => `<option value="${esc(x.value)}"${x.value === c.value ? ' selected' : ''}>${esc(x.label)}</option>`).join('');
+    const dis = canSave() ? '' : ' disabled';
+    return `<div class="txr${pending ? ' pending' : ''}" data-txn="${esc(t.id)}" style="--c:${c.color}">
+      <div class="txr-top"><button type="button" class="txr-name" data-act="fin-form" data-form="charge" data-id="${esc(t.id)}">${esc(t.merchant)}${exTag(t)}</button><span class="txr-amt">${fmt(t.amount)}</span></div>
+      <div class="txr-meta">${esc(timeFmt.format(t.at))} · ${esc(where)}${pending && !t.pick ? ' · <span class="txr-guess">guessed</span>' : ''}</div>
+      <div class="txr-ctl">
+        <label class="cat-pill" style="--c:${c.color}"><i></i><select data-txn-cat aria-label="Category for ${esc(t.merchant)}"${dis}>${opts}</select></label>
+        ${pending ? `<button type="button" class="txr-ok" data-act="fin-confirm" data-txn="${esc(t.id)}"${dis}>${ICON.check}<span>Confirm</span></button>` : ''}
+      </div>
+    </div>`;
+  }
+  // the charges still to confirm, as a section (Activity, and under the cards on Accounts)
+  function confirmSection() {
+    const todo = toConfirm();
+    if (!todo.length) return '';
+    return `<section class="sec tx-pending" id="finTodo"><div class="sec-head"><span class="lab">To confirm · ${todo.length}</span><span class="meta">Already off the balance; counts once confirmed</span></div>
+      <div class="txr-list">${todo.map(txRow).join('')}</div></section>`;
+  }
+  function vActivity() {
+    const done = S.txns.filter(t => !(isOut(t) && !t.bucketId)).sort((a, b) => b.at - a.at);
+    if (!S.txns.length) return '<div class="fin-page"><p class="empty">No charges yet. Tap + to add one.</p></div>';
+    let list = '', day = '';
+    for (const t of done) {
+      const d = dayFmt.format(t.at);
+      if (d !== day) { list += `<div class="txr-day">${esc(d)}</div>`; day = d; }
+      list += txRow(t);
+    }
+    const pend = confirmSection();
+    return `<div class="fin-page activity">${pend || '<p class="tx-clear">Everything is confirmed.</p>'}
+      <section class="sec tx-done"><div class="sec-head"><span class="lab">Confirmed</span></div><div class="txr-list">${list || '<p class="empty">Nothing confirmed yet.</p>'}</div></section></div>`;
+  }
+  // the pill: before confirming it only changes the guess; on a confirmed charge it changes the category
+  document.addEventListener('change', async e => {
+    const sel = e.target.closest && e.target.closest('[data-txn-cat]');
+    if (!sel || !canSave()) return;
+    const t = S.txns.find(x => x.id === sel.closest('[data-txn]').dataset.txn);
+    if (!t) return;
+    if (!t.bucketId) { await save(refs.txns.doc(t.id).update({ pick: sel.value })); return; }
+    const to = resolveCat(sel.value, t);
+    if (!to) { toast('No bill matches this charge. Pick the bill in its details.'); openForm('charge', t.id, {}); rerender(); return; }
+    if (to !== t.bucketId) sortTxn(t.id, to);
+  });
+  async function confirmTxn(id) {
+    const t = S.txns.find(x => x.id === id);
+    if (!t || t.bucketId) return;
+    let to = resolveCat(guessFor(t), t);
+    if (!to) { toast('No bill matches this charge. Pick the bill in its details.'); openForm('charge', t.id, {}); return; }
+    if (to === '_misc') { const m = await ensureMisc(); if (!m) return; to = m; }
+    sortTxn(id, to);
+  }
+  // Miscellaneous is the catch-all every charge can fall back to, so it always exists
+  let makingMisc = null;
+  async function ensureMisc() {
+    if (miscBucket()) return miscBucket().id;
+    if (!canSave()) return null;
+    if (!makingMisc) {
+      const id = 'misc';
+      makingMisc = save(refs.buckets.doc(id).set({ kind: 'limit', name: 'Miscellaneous', monthly: null, need: false, createdAt: Date.now(), example: false }))
+        .then(ok => (ok ? id : null)).finally(() => { makingMisc = null; });
+    }
+    return makingMisc;
   }
 
   const views = { home: vHome, bills: vBills, loans: vLoans, savings: vSavings, lists: vLists, spending: vSpending, activity: vActivity };
-  const counts = () => { const nSav = savingsToSort().length, nBills = billAlerts().length; return { home: inbox().length, savings: nSav, bills: nBills }; };
+  const counts = () => { const nSav = savingsToSort().length, nBills = billAlerts().length; return { activity: inbox().length, savings: nSav, bills: nBills }; }; // charges to confirm count once, on Activity
 
   // the sections, for POS's sidebar
   const SIDE_IC = {
@@ -1584,13 +1689,15 @@ window.POSFinance = function (ctx) {
   async function sortTxn(id, bucketId) {
     const t = S.txns.find(x => x.id === id);
     if (!t) return;
-    const prev = t.bucketId || null, bid = billIdOf(bucketId);
+    const prev = t.bucketId || null, prevPick = t.pick || null, bid = billIdOf(bucketId), prevBid = billIdOf(prev);
     const name = bucketId === '_none' ? 'Not spending' : bid ? (billById(bid) || {}).name : (bucket(bucketId) || {}).name;
-    if (!(await save(refs.txns.doc(id).update({ bucketId })))) return;
+    if (!(await save(refs.txns.doc(id).update({ bucketId, pick: null })))) return;
+    if (prevBid && prevBid !== bid) await unlinkBill(prevBid, id); // moved off a bill: that bill's month isn't paid by it anymore
+    // learn the place for next time (a bill learns from linkBill instead; a transfer teaches nothing)
     if (!bid && bucketId !== '_none') learnMerchant(bucketId, t);
     const learned = bid ? await linkBill(bid, t, false) : null;
-    toast(bid ? `${name}: charge confirmed${learned && learned.length ? `. Now ${learned.join(', ')}` : ''}` : 'Approved to ' + name, async () => {
-      if (await save(refs.txns.doc(id).update({ bucketId: prev }))) { if (bid) await unlinkBill(bid, id); }
+    toast(`${prev ? 'Moved to' : 'Confirmed:'} ${name}${learned && learned.length ? `. Now ${learned.join(', ')}` : ''}`, async () => {
+      if (await save(refs.txns.doc(id).update({ bucketId: prev, pick: prevPick }))) { if (bid) await unlinkBill(bid, id); if (prevBid && prevBid !== bid) await linkBill(prevBid, t, false); }
     });
   }
   // a payment checks off the month whose due date it's nearest to
@@ -2311,6 +2418,7 @@ window.POSFinance = function (ctx) {
     }
     if (!canSave()) return;
     if (name === 'fin-sort') sortTxn(b.dataset.txn, b.dataset.bucket);
+    else if (name === 'fin-confirm') confirmTxn(b.dataset.txn);
     else if (name === 'fin-form') openForm(b.dataset.form, b.dataset.id, { account: b.dataset.account, type: b.dataset.type, group: b.dataset.group, item: b.dataset.item, mk: b.dataset.mk, name: b.dataset.name });
     else if (name === 'fin-pay') togglePay(b.dataset.id, b.dataset.key);
     else if (name === 'fin-item-got') {
