@@ -1,8 +1,20 @@
 // Finance, on its own: the same records Nerve keeps (Supabase table fin_docs), signed in with the Nerve account.
 // finance.js draws every page; this file is the frame around it: sign-in, the section tabs, taps and the toast.
 (function () {
-  // Everything is sized to the visible height (--appH), measured here, so the page always ends at the screen's bottom edge.
-  const fitScreen = () => document.documentElement.style.setProperty('--appH', innerHeight + 'px');
+  // The page's height (--appH). On the Home Screen with the see-through status bar, iOS starts the page at the very top of
+  // the glass but reports the screen shorter by the top inset (62pt on an iPhone 17 Pro), which left a bare strip at the
+  // bottom. When the reported height plus that inset still fits the screen, that's the shortfall, and it's added back.
+  // (window.FIN_TEST lets the local test page stand in for the phone: standalone, screen height.)
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;top:0;left:0;width:1px;visibility:hidden;pointer-events:none;height:var(--envT)';
+  document.documentElement.appendChild(probe);
+  function fitScreen() {
+    const T = window.FIN_TEST || {};
+    const standalone = T.standalone != null ? T.standalone : navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    const screenH = T.screenH || screen.height, top = probe.offsetHeight;
+    const short = standalone && innerHeight >= innerWidth && top > 0 && innerHeight + top <= screenH;
+    document.documentElement.style.setProperty('--appH', (short ? innerHeight + top : innerHeight) + 'px');
+  }
   fitScreen();
   addEventListener('resize', fitScreen);
   addEventListener('orientationchange', () => setTimeout(fitScreen, 250));
