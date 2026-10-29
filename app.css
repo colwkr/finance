@@ -13,8 +13,12 @@ html,body{background:#000;height:100%}
 [data-noir] #bg{background:#000}
 [data-noir] #bg::before,[data-noir] body .app::after,#bg::after{display:none!important}
 [data-noir] body::after{opacity:.035}
-.app{position:relative;max-width:1180px;height:100dvh;padding:0 max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))!important;gap:0;transform:none!important}
-.fin-scroll{padding:calc(env(safe-area-inset-top,0px) + 62px) 14px calc(env(safe-area-inset-bottom,0px) + 96px)!important;margin:0 -14px!important}
+/* iOS 26 draws a soft blur under the status bar over anything that scrolls behind it, and a page can't turn that off.
+   So nothing scrolls there: the list stops at the island's lower edge and only solid black sits behind the clock.
+   At the bottom the list still runs into the rounded corners. */
+.app{position:relative;max-width:1180px;height:100dvh;padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))!important;gap:0;transform:none!important}
+.fin-scroll{padding:62px 14px calc(env(safe-area-inset-bottom,0px) + 96px)!important;margin:0 -14px!important}
+body::before{content:"";position:fixed;z-index:4;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:#000;pointer-events:none}
 body[data-auth="out"] #view,.login{min-height:0}
 
 /* type: the clean sans everywhere in Finance, sentence case; no mono capitals */
@@ -66,27 +70,27 @@ body.menu-on .fa-fab{visibility:hidden}
 .r-savings{--a:var(--c-save)!important;--b:var(--c-save-2)!important}
 .r-credit{--a:var(--c-credit)!important;--b:var(--c-credit-2)!important}
 
-/* Accounts: Spend wide on top, Bills and Savings side by side, the credit card wide under them; then what needs approval */
+/* Accounts: one wide card each, in the order Regions lists them: Bills, Spend, Savings, Credit card; then what needs approval */
 .fin .acct-page{max-width:760px;gap:26px}
-.fin .acards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fin .acards{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .fin .acard{position:relative;overflow:hidden;border:0;border-radius:var(--tile-r);padding:18px 18px 16px;min-height:150px;display:flex;flex-direction:column;
   justify-content:space-between;gap:18px;text-align:left;color:#fff;cursor:pointer;
   background:radial-gradient(60% 70% at 72% 62%,rgba(0,0,0,.62),rgba(0,0,0,0) 70%),linear-gradient(150deg,var(--a) 0%,var(--b) 100%)}
 .fin .acard::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
-.fin .acard.r-spend{grid-column:1/-1;order:-1;min-height:196px}
+.fin .acard{min-height:136px}
 .fin .acard.r-bills{order:0}
-.fin .acard.r-savings{order:1}
-.fin .acard.r-credit{grid-column:1/-1;order:2;min-height:130px}
+.fin .acard.r-spend{order:1}
+.fin .acard.r-savings{order:2}
+.fin .acard.r-credit{order:3}
 .fin .acard:active{transform:scale(.985)}
 .fin .acard > *{position:relative;z-index:1}
 .fin .acard-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .fin .acard-name{font:400 17px/1.2 var(--font)}
 .fin .acard-num{font:400 13px/1 var(--font);color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
-.fin .acard-bal{font:300 34px/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;gap:8px}
-.fin .acard.r-spend .acard-bal,.fin .acard.r-credit .acard-bal{font-size:52px}
+.fin .acard-bal{font:300 46px/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;gap:8px}
 .fin .acard-bal .cents{opacity:.62;font-size:.62em}
 .fin .acard-bal small{font-size:15px;font-weight:400;color:rgba(255,255,255,.75);letter-spacing:0}
-@media (max-width:370px){ .fin .acard-bal{font-size:28px} .fin .acard.r-spend .acard-bal,.fin .acard.r-credit .acard-bal{font-size:44px} }
+@media (max-width:370px){ .fin .acard-bal{font-size:38px} }
 /* what needs approval, under the cards, on the same rounded tiles */
 .fin .acct-page .charge,.fin .acct-page .float{border-radius:26px!important;background:#121214!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)!important}
 .fin .acct-page .chip{border-radius:999px!important}

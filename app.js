@@ -36,6 +36,7 @@
     const side = FIN.side(), cur = side.items.find(i => i.key === side.current) || {};
     $('#nav').innerHTML = side.items.map(i => `<button type="button" data-act="fin-sub" data-sub="${esc(i.key)}"${i.key === side.current ? ' aria-current="page"' : ''}>${i.icon}<span>${esc(i.label)}</span>${i.badge ? `<em>${i.badge}</em>` : ''}</button>`).join('');
     $('#where').textContent = cur.label || '';
+    $('#addBtn').hidden = side.current === 'home'; // Accounts has no +: balances are set by tapping a card
     // the menu button carries a dot when another section has something waiting
     const waiting = side.items.filter(i => i.key !== side.current).reduce((t, i) => t + (i.badge || 0), 0);
     $('#menuBadge').hidden = !waiting; $('#menuBadge').textContent = waiting;
