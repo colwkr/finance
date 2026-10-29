@@ -1,149 +1,186 @@
-/* Finance on its own: the frame around Nerve's finance pages, in its own look.
-   Pure black, big rounded tiles in saturated gradients with a dark glow at their heart, light sans numbers.
-   Full screen on the iPhone: the page scrolls under the Dynamic Island and down into the rounded bottom corners;
-   nothing fades or blurs the top. Only the menu button keeps clear of the clock. */
-:root{padding:0!important;
-  --c-spend:#2fbf71; --c-spend-2:#0d6b3e;
-  --c-bills:#3b5cff; --c-bills-2:#1a2a9c;
-  --c-save:#ff4fa3; --c-save-2:#b8247a;
-  --c-credit:#ff6a2b; --c-credit-2:#b8321a;
-  --c-none:#6b6f7a; --c-none-2:#2e3138;
+/* Finance on its own, in its own look: one soft gradient from bezel to bezel (sage at the top, rose, mauve, plum at the
+   bottom) and frosted glass over it for everything you read or touch. One warm coral accent. Light sans type throughout.
+   Full screen on the iPhone: the gradient runs under the status bar and into every corner. Nothing scrolls behind
+   the Dynamic Island, so iOS's own blur up there has nothing to smear; at the bottom the list runs into the corners. */
+:root,:root[data-theme="dark"],:root[data-wall][data-theme="dark"]{
+  padding:0!important;
+  --font:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+  --mono:var(--font);
+  --accent:#ff6b4f; --accent-2:#e4472f;
+  --ink:#fff; --ink-2:rgba(255,255,255,.74); --ink-3:rgba(255,255,255,.5);
+  --qacc:var(--accent); --qink:#fff; --qdim:rgba(255,255,255,.7);
+  --chrome:#9a8f8a;
+  --glass:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.07));
+  --sheet:linear-gradient(180deg,rgba(120,86,100,.72),rgba(70,44,60,.82));
+  --blur:blur(26px) saturate(150%);
+  --glass-border:rgba(255,255,255,.28); --glass-hi:rgba(255,255,255,.7); --glass-lo:rgba(255,255,255,.18); --sheen:rgba(255,255,255,.12);
+  --control:rgba(255,255,255,.14); --panel-hi:rgba(255,255,255,.16); --well:rgba(255,255,255,.1); --hair:rgba(255,255,255,.16);
+  --field:rgba(255,255,255,.12); --field-border:rgba(255,255,255,.24); --line:rgba(255,255,255,.4);
+  --solid:#fff; --on-solid:#3a2230;
+  --good:#b9f5c9; --warn:#ffd79a; --bad:#ff8a73; --on-bad:#2a0e08;
+  --lift:0 24px 50px -26px rgba(40,10,25,.55); --lift-sm:0 10px 24px -14px rgba(40,10,25,.5);
+  --glow:0 0 0 0 transparent; --sel-glow:0 0 0 0 transparent; --halo:none;
   --tile-r:30px}
-html,body{background:#000;height:100%}
-[data-noir] #bg{background:#000}
-[data-noir] #bg::before,[data-noir] body .app::after,#bg::after{display:none!important}
-[data-noir] body::after{opacity:.035}
-/* iOS 26 draws a soft blur under the status bar over anything that scrolls behind it, and a page can't turn that off.
-   So nothing scrolls there: the list stops at the island's lower edge and only solid black sits behind the clock.
-   At the bottom the list still runs into the rounded corners. */
+
+/* the ground: fixed, the whole glass of the phone */
+html{height:100%;background:#6f5462}
+body{height:100%;background:transparent!important}
+#bg{position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(70% 45% at 85% 8%,rgba(214,226,196,.75),rgba(214,226,196,0) 70%),
+  radial-gradient(60% 40% at 10% 30%,rgba(232,176,170,.55),rgba(232,176,170,0) 70%),
+  radial-gradient(70% 45% at 70% 70%,rgba(255,120,96,.28),rgba(255,120,96,0) 70%),
+  linear-gradient(180deg,#b6b3a2 0%,#b98d93 30%,#946b7d 58%,#5d3d52 82%,#3a2235 100%)}
+#bg .wall,#bg::after,#bg::before{display:none!important}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:2147483000;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .8 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
 .app{position:relative;max-width:1180px;height:100dvh;padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))!important;gap:0;transform:none!important}
-.fin-scroll{padding:62px 14px calc(env(safe-area-inset-bottom,0px) + 96px)!important;margin:0 -14px!important}
-body::before{content:"";position:fixed;z-index:4;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:#000;pointer-events:none}
+.fin-scroll{padding:64px 14px calc(env(safe-area-inset-bottom,0px) + 100px)!important;margin:0 -14px!important}
 body[data-auth="out"] #view,.login{min-height:0}
+#view{text-shadow:none}
 
-/* type: the clean sans everywhere in Finance, sentence case; no mono capitals */
-.fin .lab,.fin .pill,.fin .link,.fin .btn,#finSheet .lab,#finSheet .btn,.toast{font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important}
-.fin .lab{font-size:15px!important;font-weight:400;color:rgba(255,255,255,.62)}
-.fin .sec-head .lab::before{display:none!important}
-.fin .pill{font-size:11px!important;font-weight:500;border-radius:999px!important;padding:3px 9px}
+/* type: the sans everywhere, sentence case, soft white */
+.lab{font:400 15px/1.3 var(--font)!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink-2)!important}
+.pill{font:500 11px/1.3 var(--font)!important;letter-spacing:0!important;text-transform:none!important;border-radius:999px!important;padding:4px 10px!important;
+  background:rgba(255,255,255,.16)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.pill.ok{background:rgba(255,255,255,.22)!important}
+.pill.late,.pill.over{background:var(--accent)!important;box-shadow:none}
+.pill .i{width:12px;height:12px}
+.link{font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important;color:#fff!important}
+.btn{font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important;border-radius:999px!important;background:rgba(255,255,255,.16);color:#fff;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)!important}
+.btn.solid{background:#fff!important;color:#3a2230!important;box-shadow:none!important}
+.circle{border-radius:50%!important;background:rgba(255,255,255,.16)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)!important}
+.fin .fig{color:#fff}
 
-/* the menu: a round button floating under the clock */
-.fa-bar{position:absolute;z-index:5;top:calc(env(safe-area-inset-top,0px) + 6px);left:max(14px,env(safe-area-inset-left,0px))}
-.fa-menu{position:relative;display:inline-flex;align-items:center;gap:10px;border:0;cursor:pointer;height:44px;padding:0 18px 0 12px;border-radius:22px;
-  background:rgba(28,28,31,.92);color:#fff;font:500 15px/1 var(--font);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 8px 24px -8px rgba(0,0,0,.9)}
+/* glass: every panel in every section */
+.float,.fin .float,.fin .float.list{border-radius:28px!important;background:var(--g-lines),var(--g-sheen),var(--glass)!important;
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:inset 0 0 0 1px var(--glass-border),var(--lift)!important}
+.fin .float.list > *{border-radius:0}
+
+/* the menu button: a glass pill floating under the clock */
+.fa-bar{position:absolute;z-index:5;top:calc(env(safe-area-inset-top,0px) + 8px);left:max(14px,env(safe-area-inset-left,0px))}
+.fa-menu{position:relative;display:inline-flex;align-items:center;gap:10px;border:0;cursor:pointer;height:46px;padding:0 20px 0 13px;border-radius:23px;color:#fff;
+  font:400 16px/1 var(--font);background:var(--g-lines),var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  box-shadow:inset 0 0 0 1px var(--glass-border),var(--lift-sm)}
 .fa-menu .i{width:22px;height:22px}
-.fa-menu em{position:absolute;left:24px;top:5px;min-width:16px;height:16px;border-radius:8px;padding:0 4px;display:grid;place-items:center;
-  font:600 9.5px/1 var(--font);font-style:normal;background:var(--c-credit);color:#fff}
+.fa-menu em{position:absolute;left:25px;top:6px;min-width:16px;height:16px;border-radius:8px;padding:0 4px;display:grid;place-items:center;
+  font:600 9.5px/1 var(--font);font-style:normal;background:var(--accent);color:#fff}
 
-/* the sidebar */
-.fa-scrim{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);animation:faFade .2s ease-out}
+/* the sidebar: a glass sheet over the gradient */
+.fa-scrim{position:fixed;inset:0;z-index:20;background:rgba(40,16,30,.28);animation:faFade .2s ease-out}
 .fa-side{position:fixed;z-index:21;top:0;bottom:0;left:0;width:min(300px,84vw);display:flex;flex-direction:column;gap:6px;
-  padding:calc(env(safe-area-inset-top,0px) + 16px) 12px calc(env(safe-area-inset-bottom,0px) + 16px) max(12px,env(safe-area-inset-left,0px));
-  background:#0b0b0d;border-radius:0 34px 34px 0;box-shadow:inset -1px 0 0 rgba(255,255,255,.08),30px 0 60px -20px rgba(0,0,0,.9);
-  transform:translateX(-102%);transition:transform .28s cubic-bezier(.2,.85,.25,1);visibility:hidden}
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 12px calc(env(safe-area-inset-bottom,0px) + 18px) max(12px,env(safe-area-inset-left,0px));
+  border-radius:0 36px 36px 0;background:var(--g-sheen),linear-gradient(180deg,rgba(150,120,125,.55),rgba(80,50,68,.7));
+  -webkit-backdrop-filter:blur(30px) saturate(160%);backdrop-filter:blur(30px) saturate(160%);box-shadow:inset -1px 0 0 rgba(255,255,255,.3),30px 0 60px -20px rgba(40,10,25,.6);
+  transform:translateX(-102%);transition:transform .3s cubic-bezier(.2,.85,.25,1);visibility:hidden}
 body.menu-on .fa-side{transform:none;visibility:visible}
 @keyframes faFade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){ .fa-side{transition:none} }
-.fa-nav{display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto}
-.fa-nav button,.fa-out{display:flex;align-items:center;gap:14px;border:0;background:none;color:rgba(255,255,255,.7);min-height:50px;padding:0 16px;border-radius:25px;
+.fa-nav{display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto}
+.fa-nav button,.fa-out{display:flex;align-items:center;gap:14px;border:0;background:none;color:rgba(255,255,255,.82);min-height:52px;padding:0 16px;border-radius:26px;
   text-align:left;font:400 17px/1 var(--font);cursor:pointer}
 .fa-nav button .i,.fa-out .i{width:20px;height:20px;flex:none}
 .fa-nav button span{flex:1}
-.fa-nav button:hover,.fa-out:hover{background:rgba(255,255,255,.06);color:#fff}
-.fa-nav button[aria-current="page"]{background:#fff;color:#000}
-.fa-nav button em{font-style:normal;font-size:11px;min-width:20px;height:20px;border-radius:10px;display:grid;place-items:center;padding:0 6px;background:var(--c-credit);color:#fff;font-weight:600}
+.fa-nav button:hover,.fa-out:hover{background:rgba(255,255,255,.1);color:#fff}
+.fa-nav button[aria-current="page"]{background:rgba(255,255,255,.26);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.fa-nav button em{font-style:normal;font-size:11px;min-width:20px;height:20px;border-radius:10px;display:grid;place-items:center;padding:0 6px;background:var(--accent);color:#fff;font-weight:600}
 .fa-out{margin-top:8px}
 
-/* add, bottom right, tucked into the corner */
+/* add, bottom right, coral */
 .fa-fab{position:fixed;z-index:10;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
-  width:60px;height:60px;border:0;border-radius:50%;display:grid;place-items:center;background:#fff;color:#000;cursor:pointer;
-  box-shadow:0 14px 34px -8px rgba(0,0,0,.95)}
+  width:62px;height:62px;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;cursor:pointer;
+  background:radial-gradient(80% 80% at 30% 25%,#ff9a80,var(--accent) 55%,var(--accent-2));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 16px 34px -10px rgba(150,30,20,.6)}
 .fa-fab .i{width:26px;height:26px;stroke-width:1.8}
 .fa-fab:active{transform:scale(.94)}
 body.menu-on .fa-fab{visibility:hidden}
-.toast{bottom:calc(env(safe-area-inset-bottom,0px) + 90px)!important;border-radius:22px!important}
+.toast{bottom:calc(env(safe-area-inset-bottom,0px) + 92px)!important;border-radius:22px!important;font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important}
 
-/* a tile: its color, a darker sweep, and a dark glow at the heart, like the light inside a lens */
-.fin .acard,.fin .bill-card{--a:var(--c-none);--b:var(--c-none-2)}
-.r-spend{--a:var(--c-spend)!important;--b:var(--c-spend-2)!important}
-.r-bills{--a:var(--c-bills)!important;--b:var(--c-bills-2)!important}
-.r-savings{--a:var(--c-save)!important;--b:var(--c-save-2)!important}
-.r-credit{--a:var(--c-credit)!important;--b:var(--c-credit-2)!important}
+/* forms: a glass sheet tinted with the gradient */
+dialog#finSheet{border-radius:36px!important}
+dialog#finSheet::backdrop{background:rgba(40,16,30,.3)}
+#finSheet .sheet-head .bar h2{font:400 20px/1.2 var(--font)!important;text-transform:none!important;letter-spacing:0!important}
+#finSheet .f-h,#finSheet .lab{color:var(--ink-2)!important}
+.f input,#finSheet .f select{border-radius:18px!important}
 
-/* Accounts: one wide card each, in the order Regions lists them: Bills, Spend, Savings, Credit card; then what needs approval */
-.fin .acct-page{max-width:760px;gap:26px}
-.fin .acards{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
-.fin .acard{position:relative;overflow:hidden;border:0;border-radius:var(--tile-r);padding:18px 18px 16px;min-height:150px;display:flex;flex-direction:column;
-  justify-content:space-between;gap:18px;text-align:left;color:#fff;cursor:pointer;
-  background:radial-gradient(60% 70% at 72% 62%,rgba(0,0,0,.62),rgba(0,0,0,0) 70%),linear-gradient(150deg,var(--a) 0%,var(--b) 100%)}
-.fin .acard::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
-.fin .acard{min-height:136px}
-.fin .acard.r-bills{order:0}
-.fin .acard.r-spend{order:1}
-.fin .acard.r-savings{order:2}
-.fin .acard.r-credit{order:3}
+/* Accounts: a glossy see-through card for each account, in Regions' order: Bills, Spend, Savings, Credit card */
+.fin .acct-page{max-width:520px;gap:28px;margin:0 auto}
+.fin .acards{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.fin .acard{--tint:255,255,255;position:relative;overflow:hidden;isolation:isolate;aspect-ratio:1.62;border:0;border-radius:24px;padding:20px 22px 18px;
+  display:grid;grid-template-rows:auto auto 1fr auto;text-align:left;color:#fff;cursor:pointer;
+  background:
+    linear-gradient(115deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.08) 38%,rgba(255,255,255,0) 52%,rgba(255,255,255,.1) 78%,rgba(255,255,255,.22) 100%),
+    radial-gradient(90% 120% at 100% 100%,rgba(var(--tint),.55),rgba(var(--tint),0) 70%),
+    linear-gradient(160deg,rgba(var(--tint),.32),rgba(var(--tint),.1));
+  -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 0 0 1px rgba(255,255,255,.34),inset 0 -1px 0 rgba(255,255,255,.12),0 24px 40px -22px rgba(40,10,25,.7)}
+/* a gloss streak across the top of the card */
+.fin .acard::before{content:"";position:absolute;z-index:-1;left:-20%;top:-60%;width:140%;height:90%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(255,255,255,.35),rgba(255,255,255,0));transform:rotate(-8deg);pointer-events:none}
+.fin .acard.r-bills{--tint:150,170,255;order:0}
+.fin .acard.r-spend{--tint:255,170,140;order:1}
+.fin .acard.r-savings{--tint:255,214,170;order:2}
+.fin .acard.r-credit{--tint:60,36,52;order:3}
 .fin .acard:active{transform:scale(.985)}
-.fin .acard > *{position:relative;z-index:1}
-.fin .acard-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.fin .acard-name{font:400 17px/1.2 var(--font)}
-.fin .acard-num{font:400 13px/1 var(--font);color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
-.fin .acard-bal{font:300 46px/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;gap:8px}
-.fin .acard-bal .cents{opacity:.62;font-size:.62em}
-.fin .acard-bal small{font-size:15px;font-weight:400;color:rgba(255,255,255,.75);letter-spacing:0}
-@media (max-width:370px){ .fin .acard-bal{font-size:38px} }
-/* what needs approval, under the cards, on the same rounded tiles */
-.fin .acct-page .charge,.fin .acct-page .float{border-radius:26px!important;background:#121214!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)!important}
-.fin .acct-page .chip{border-radius:999px!important}
+.fin .acard-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fin .acard-name{font:500 17px/1.2 var(--font);letter-spacing:.01em}
+.fin .acard-kind{font:400 12px/1 var(--font);color:rgba(255,255,255,.75);letter-spacing:.08em;text-transform:uppercase}
+.fin .acard-chip{margin-top:14px;display:flex;align-items:center;gap:12px}
+.fin .acard-chip i{display:block;width:40px;height:30px;border-radius:7px;
+  background:linear-gradient(135deg,rgba(255,236,190,.95),rgba(214,178,110,.85) 50%,rgba(255,226,170,.9));
+  box-shadow:inset 0 0 0 1px rgba(120,80,20,.25),inset 0 0 0 7px rgba(255,255,255,.12)}
+.fin .acard-chip svg{width:22px;height:22px;stroke:rgba(255,255,255,.85);fill:none;stroke-width:1.6;stroke-linecap:round}
+.fin .acard-bal{align-self:end;font:300 40px/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;gap:8px;
+  text-shadow:0 1px 12px rgba(60,20,40,.25)}
+.fin .acard-bal .cents{opacity:.7;font-size:.6em}
+.fin .acard-bal small{font-size:14px;font-weight:400;color:rgba(255,255,255,.8)}
+.fin .acard-num{margin-top:12px;font:400 15px/1 var(--font);letter-spacing:.22em;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 0 rgba(0,0,0,.18)}
+@media (max-width:370px){ .fin .acard-bal{font-size:34px} }
+/* what needs approval, under the cards */
+.fin .acct-page .chip{border-radius:999px!important;background:rgba(255,255,255,.16)!important;color:#fff}
 
-/* Bills & subs: a tile per bill tinted by the account it comes out of; side by side columns on a wide screen */
-.fin .bills-two{gap:24px}
+/* Bills & subs: glass tiles; side by side columns on a wide screen */
+.fin .bills-two{gap:26px}
 @container fin (min-width:820px){ .fin .bills-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start} }
 @container fin (max-width:819.9px){ .fin .bills-two > div{display:block} }
 .fin .bills-two .sec{gap:12px}
-.fin .bill-cards{display:flex;flex-direction:column;gap:10px}
-.fin .bill-card{position:relative;overflow:hidden;border-radius:var(--tile-r);padding:16px 16px 14px;display:flex;flex-direction:column;gap:14px;color:#fff;
-  background:radial-gradient(70% 90% at 85% 50%,rgba(0,0,0,.55),rgba(0,0,0,0) 72%),linear-gradient(150deg,color-mix(in srgb,var(--a) 78%,#000) 0%,color-mix(in srgb,var(--b) 70%,#000) 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.05)}
-.fin .bill-card.is-paid{background:#141416;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
-.fin .bill-card.is-paid .bc-title{color:rgba(255,255,255,.6)}
+.fin .bill-cards{display:flex;flex-direction:column;gap:12px}
+.fin .bill-card{position:relative;border-radius:var(--tile-r);padding:16px 16px 14px;display:flex;flex-direction:column;gap:14px;color:#fff;
+  background:var(--g-lines),var(--g-sheen),var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  box-shadow:inset 0 0 0 1px var(--glass-border),var(--lift)}
+.fin .bill-card.st-late,.fin .bill-card.st-waiting{box-shadow:inset 0 0 0 1.5px rgba(255,140,110,.85),var(--lift)}
+.fin .bill-card.is-paid{background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04));box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.fin .bill-card.is-paid .bc-title{color:rgba(255,255,255,.72)}
 .fin .bc-top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:start}
 .fin .bc-names{display:flex;flex-direction:column;min-width:0}
 .fin .bc-names input{border:0;background:none;color:#fff;font-family:var(--font);padding:2px 6px;margin:0 -6px;border-radius:10px;min-width:0;width:100%}
-.fin .bc-names input:hover,.fin .bc-names input:focus{outline:none;background:rgba(255,255,255,.1)}
-.fin .bc-title{font-size:19px;font-weight:400;letter-spacing:-.005em}
-.fin .bc-co{font-size:14px;color:rgba(255,255,255,.7)!important}
+.fin .bc-names input:hover,.fin .bc-names input:focus{outline:none;background:rgba(255,255,255,.14)}
+.fin .bc-title{font-size:19px;font-weight:400}
+.fin .bc-co{font-size:14px;color:rgba(255,255,255,.74)!important}
 .fin .bc-st{padding-top:4px}
-.fin .bc-st .pill{background:rgba(0,0,0,.35)!important;color:#fff!important}
-.fin .bc-st .pill.late{background:#fff!important;color:#000!important}
-.fin .bc-st .pill .i{width:12px;height:12px}
-.fin .bc-more{width:34px;height:34px;border-radius:50%!important;background:rgba(0,0,0,.28)!important;color:#fff;box-shadow:none!important}
+.fin .bc-more{width:36px;height:36px}
 .fin .bc-more .i{width:16px;height:16px}
 
 /* the pill dropdowns: day, account, amount, paid */
 .fin .bc-pills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.fin .pick{position:relative;display:inline-flex;align-items:center;gap:2px;border:0;border-radius:999px;min-height:38px;padding:0 13px;
-  background:rgba(0,0,0,.32);color:#fff;font:500 14px/1 var(--font);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-.fin .bill-card.is-paid .pick{background:rgba(255,255,255,.06)}
+.fin .pick{position:relative;display:inline-flex;align-items:center;gap:2px;border:0;border-radius:999px;min-height:40px;padding:0 14px;
+  background:rgba(255,255,255,.16);color:#fff;font:400 15px/1 var(--font);box-shadow:inset 0 0 0 1px rgba(255,255,255,.26)}
 .fin .pick select{appearance:none;-webkit-appearance:none;border:0;background:none;color:inherit;font:inherit;padding:11px 16px 11px 0;cursor:pointer;border-radius:0!important;
   background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
-  background-position:right 4px center,right 0 center;background-size:4px 4px,4px 4px;background-repeat:no-repeat}
-.fin .pick select option{background:#151515;color:#eee}
-.fin .pick.money span{color:rgba(255,255,255,.65)}
-.fin .pick.money input{border:0;background:none;color:inherit;font:inherit;width:7ch;padding:11px 0;font-variant-numeric:tabular-nums;border-radius:0!important}
+  background-position:right 4px center,right 0 center;background-size:4px 4px,4px 4px;background-repeat:no-repeat;box-shadow:none!important;min-height:0}
+.fin .pick select option{background:#5d3d52;color:#fff}
+.fin .pick.money span{color:rgba(255,255,255,.7)}
+.fin .pick.money input{border:0;background:none;color:inherit;font:inherit;width:7ch;padding:11px 0;font-variant-numeric:tabular-nums;border-radius:0!important;box-shadow:none!important}
 .fin .pick.money input:focus{outline:none}
-.fin .pick:focus-within{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.7)}
+.fin .pick:focus-within{box-shadow:inset 0 0 0 1.5px #fff}
 .fin .paid-pick{gap:6px;cursor:pointer;margin-left:auto}
-.fin .paid-pick .i{width:15px;height:15px;opacity:.4}
-.fin .paid-pick[aria-pressed="true"],.fin .bill-card.is-paid .paid-pick[aria-pressed="true"]{background:#fff;color:#000;box-shadow:none}
+.fin .paid-pick .i{width:15px;height:15px;opacity:.5}
+.fin .paid-pick[aria-pressed="true"]{background:radial-gradient(80% 80% at 30% 25%,#ff9a80,var(--accent) 60%,var(--accent-2));color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
 .fin .paid-pick[aria-pressed="true"] .i{opacity:1}
-.fin .bill-cards .add-row{border-radius:var(--tile-r)!important;padding:16px 18px;background:#121214!important}
+.fin .bill-cards .add-row{border-radius:var(--tile-r)!important;padding:16px 18px;color:#fff}
 @media (max-width:420px){
   .fin .paid-pick{margin-left:0}
   .fin .bc-top{grid-template-columns:minmax(0,1fr) auto}
   .fin .bc-st{grid-row:2;grid-column:1;padding-top:0}
 }
-
-/* the other sections pick up the same rounded corners */
-.fin .float,.fin .float.list{border-radius:26px!important}
-.fin .btn{border-radius:999px!important}
-[data-noir] dialog#finSheet{border-radius:34px!important}
