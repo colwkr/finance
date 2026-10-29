@@ -14,6 +14,7 @@
     const screenH = T.screenH || screen.height, top = probe.offsetHeight;
     const short = standalone && innerHeight >= innerWidth && top > 0 && innerHeight + top <= screenH;
     document.documentElement.style.setProperty('--appH', (short ? innerHeight + top : innerHeight) + 'px');
+    document.documentElement.style.setProperty('--gapB', (short ? top : 0) + 'px'); // how far the window stops short of the screen's bottom
   }
   fitScreen();
   addEventListener('resize', fitScreen);
@@ -87,7 +88,6 @@
     $('#scrim').hidden = !open;
     $('#side').setAttribute('aria-hidden', String(!open));
     $('#menuBtn').setAttribute('aria-expanded', String(open));
-    if (open) { const c = $('#nav [aria-current]'); if (c) c.focus({ preventScroll: true }); }
   }
   $('#menuBtn').onclick = () => setMenu(!document.body.classList.contains('menu-on'));
   $('#scrim').onclick = () => setMenu(false);

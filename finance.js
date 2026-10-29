@@ -791,8 +791,13 @@ window.POSFinance = function (ctx) {
       const tip = `${shortDay.format(new Date(y, m, d))}: ${future ? 'still to come' : fmt(v)}`;
       bars.push(`<span class="db${future ? ' later' : v ? '' : ' zero'}${d === today ? ' today' : ''}" style="--h:${future ? 12 : v ? Math.max(8, v / most * 100).toFixed(1) : 4}%" title="${esc(tip)}"></span>`);
     }
+    // "Today" sits under today's bar; within a few days of either end it takes that end's date instead of covering it
+    const isCur = mk === cur, nearStart = isCur && today <= 5, nearEnd = isCur && today > dim - 5;
+    const first = nearStart ? '<span class="db-now-end">Today</span>' : `<span>${esc(shortDay.format(new Date(y, m, 1)))}</span>`;
+    const last = nearEnd ? '<span class="db-now-end">Today</span>' : `<span>${esc(shortDay.format(new Date(y, m, dim)))}</span>`;
+    const mid = isCur && !nearStart && !nearEnd ? `<span class="db-now" style="left:${((today - 0.5) / dim * 100).toFixed(2)}%">Today</span>` : '';
     return `<div class="daily" role="img" aria-label="${esc(`Spending by day in ${mkName(mk)}, most on one day ${fmt(most === 1 ? 0 : most)}`)}"><div class="db-bars">${bars.join('')}</div>
-      <div class="db-axis"><span>${esc(shortDay.format(new Date(y, m, 1)))}</span>${mk === cur ? `<span class="db-now" style="left:${((today - 0.5) / dim * 100).toFixed(2)}%">Today</span>` : ''}<span>${esc(shortDay.format(new Date(y, m, dim)))}</span></div></div>`;
+      <div class="db-axis">${first}${mid}${last}</div></div>`;
   }
   // a ring per category: how much of its limit is used, or just what's been spent when it has none
   function ring(l, mk = curMk()) {
@@ -1854,7 +1859,8 @@ window.POSFinance = function (ctx) {
   };
 
   // the sheet lives in its own dialog so it never collides with the task sheet
-  document.body.insertAdjacentHTML('beforeend', `<dialog id="finSheet" aria-labelledby="finTitle">
+  // autofocus on the sheet itself: opening it focuses the sheet, not its close button (no focus ring on the ✕)
+  document.body.insertAdjacentHTML('beforeend', `<dialog id="finSheet" aria-labelledby="finTitle" autofocus tabindex="-1">
     <form id="finForm" novalidate>
       <div class="sheet-head" id="finHead"><div class="grab"></div><div class="bar"><h2 id="finTitle"></h2><button type="button" class="circle" id="finClose" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div></div>
       <div id="finBody" class="sheet-body"></div>
@@ -1876,6 +1882,7 @@ window.POSFinance = function (ctx) {
     if (ctx.setDrawer) ctx.setDrawer(false);
     sheet.style.transform = '';
     if (!sheet.open) sheet.showModal();
+    sheet.focus({ preventScroll: true }); // the sheet, not its first button: no focus ring on the ✕ when it opens
     if (window.POSWheels && $('#finBody [data-wheel]')) { POSWheels.mount($('#finBody')); POSWheels.sync(); }
   }
   function closeForm() { if (sheet.open) sheet.close(); F = null; }

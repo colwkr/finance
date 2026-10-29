@@ -103,9 +103,21 @@ body.menu-on .fa-side{transform:none;visibility:visible}
 body.menu-on .fa-fab{visibility:hidden}
 .toast{position:absolute!important;bottom:auto!important;top:calc(var(--appH,100dvh) - var(--envB) - 136px)!important;border-radius:22px!important;font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important}
 
-/* forms: a glass sheet tinted with the gradient */
-dialog#finSheet{border-radius:36px!important}
+/* the daily chart's "Today" when it stands in for the first or last date */
+.fin .db-axis .db-now-end{color:var(--ink);font-weight:500}
+
+/* small links (Show items, Edit, Show 6 charges) and the loan slider: big enough for a thumb */
+.fin .link{display:inline-flex;align-items:center;min-height:36px;min-width:36px;padding:0 4px;font-size:13px!important}
+.fin .lx input[type=range]{height:40px}
+#finSheet .f-check{min-height:44px}
+
+/* forms: a glass sheet tinted with the gradient, sitting between the clock and the home bar.
+   --gapB (app.js) is how far iOS's short report leaves the bottom of the window above the real bottom of the screen;
+   the sheet is pinned to the real bottom by giving that back. */
+dialog#finSheet{border-radius:36px!important;max-height:calc(var(--appH,100dvh) - var(--envT) - var(--envB) - 24px)!important;
+  margin:auto auto calc(var(--envB) + 10px - var(--gapB,0px))!important}
 dialog#finSheet::backdrop{background:rgba(40,16,30,.3)}
+dialog#finSheet:focus{outline:none}
 #finSheet .sheet-head .bar h2{font:400 20px/1.2 var(--font)!important;text-transform:none!important;letter-spacing:0!important}
 #finSheet .f-h,#finSheet .lab{color:var(--ink-2)!important}
 .f input,#finSheet .f select{border-radius:18px!important}
