@@ -37,7 +37,7 @@ window.POSFinance = function (ctx) {
     return m[1] ? -cents : cents;
   }
 
-  const SUBS = { home: 'Overview', bills: 'Bills & subs', loans: 'Loans', savings: 'Savings', lists: 'Lists', spending: 'Spending', activity: 'Activity' };
+  const SUBS = { home: 'Accounts', bills: 'Bills & subs', loans: 'Loans', savings: 'Savings', lists: 'Lists', spending: 'Spending', activity: 'Activity' };
   const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], income: [], months: [], worth: [], sub: 'home', open: new Set(), confirmClear: false, ovMk: null, spMk: null, day: null, nw: 'net' };
   try { const t = localStorage.getItem('pos.fin.sub'); if (SUBS[t]) S.sub = t; const w = localStorage.getItem('pos.fin.nw'); if (w) S.nw = w; } catch (e) {}
   let F = null; // the form currently in the sheet
@@ -1128,10 +1128,21 @@ window.POSFinance = function (ctx) {
 
   // the overview: how you're doing, in pictures. The month arrows move what it went on, its days and its pay together.
   function vHome() {
-    // just the accounts and what's in them, as the bank shows it; charges to sort sit under them when there are any
-    const todo = inbox();
+    // each account as its card: its name, its number and what's in it, as the bank shows it. Tap one to set the balance.
+    // Charges still to sort sit under the cards.
+    const todo = inbox(), accts = sorted(S.accounts.filter(a => !isThing(a)));
+    const card = a => {
+      const credit = a.type === 'credit', num = (a.last4 || [])[0];
+      return `<button type="button" class="acard t-${esc(a.type)}${a.id === 'acct-bills' || /bill/i.test(a.name) ? ' is-bills' : ''}" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(acctBalance(a))}. Update the balance`)}">
+        <span class="acard-top"><b>${esc(a.name)}</b>${a.type === 'savings' ? '' : '<i class="dc-chip"></i>'}</span>
+        <span class="acard-bal">${big(acctBalance(a))}</span>
+        <span class="acard-foot"><span>${num ? '•••• ' + esc(num) : ''}</span><span>${credit ? 'Owed' : a.type === 'savings' ? 'Savings' : 'Checking'}</span></span>
+      </button>`;
+    };
+    const cards = accts.length ? `<div class="acards">${accts.map(card).join('')}</div>`
+      : `<p class="empty">No accounts yet.</p>${canSave() ? '<div><button type="button" class="btn solid" data-act="fin-form" data-form="account">Add account</button></div>' : ''}`;
     const appr = todo.length ? `<section class="sec" id="finTodo"><span class="lab">Needs approval · ${todo.length}</span><div class="stack">${todo.map(chargeCard).join('')}</div></section>` : '';
-    return `<div class="fin-page ov-simple">${acctList()}${appr}</div>`;
+    return `<div class="fin-page acct-page">${cards}${appr}</div>`;
   }
 
   // A list of bills for layouts, filtered. filter.status: 'upcoming' (not paid, due or late this month, or due within
@@ -1508,7 +1519,7 @@ window.POSFinance = function (ctx) {
   }
 
   const views = { home: vHome, bills: vBills, loans: vLoans, savings: vSavings, lists: vLists, spending: vSpending, activity: vActivity };
-  const counts = () => { const nSav = savingsToSort().length, nBills = billAlerts().length; return { home: inbox().length + nSav + nBills, savings: nSav, bills: nBills }; };
+  const counts = () => { const nSav = savingsToSort().length, nBills = billAlerts().length; return { home: inbox().length, savings: nSav, bills: nBills }; };
 
   // the sections, for POS's sidebar
   const SIDE_IC = {

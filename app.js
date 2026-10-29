@@ -29,16 +29,33 @@
     if (editing()) { pending = true; return; }
     pending = false;
     const view = $('#view'), signedIn = !!S.user;
-    $('#tabs').hidden = !signedIn; $('#signOut').hidden = !signedIn; $('#addBtn').hidden = !signedIn;
+    $('#bar').hidden = !signedIn; $('#addBtn').hidden = !signedIn;
+    if (!signedIn) setMenu(false);
     if (!S.ready) { view.innerHTML = ''; return; }
     if (!signedIn) { view.innerHTML = vLogin(); return; }
-    const side = FIN.side();
-    $('#tabs').innerHTML = side.items.map(i => `<button type="button" data-act="fin-sub" data-sub="${esc(i.key)}"${i.key === side.current ? ' aria-current="page"' : ''}>${i.icon}<span>${esc(i.label)}</span>${i.badge ? `<em>${i.badge}</em>` : ''}</button>`).join('');
+    const side = FIN.side(), cur = side.items.find(i => i.key === side.current) || {};
+    $('#nav').innerHTML = side.items.map(i => `<button type="button" data-act="fin-sub" data-sub="${esc(i.key)}"${i.key === side.current ? ' aria-current="page"' : ''}>${i.icon}<span>${esc(i.label)}</span>${i.badge ? `<em>${i.badge}</em>` : ''}</button>`).join('');
+    $('#where').textContent = cur.label || '';
+    // the menu button carries a dot when another section has something waiting
+    const waiting = side.items.filter(i => i.key !== side.current).reduce((t, i) => t + (i.badge || 0), 0);
+    $('#menuBadge').hidden = !waiting; $('#menuBadge').textContent = waiting;
     const sc = $('#finScroll'), top = sc ? sc.scrollTop : 0;
     view.innerHTML = FIN.view();
     const sc2 = $('#finScroll'); if (sc2) sc2.scrollTop = top;
-    document.title = 'Finance · ' + ((side.items.find(i => i.key === side.current) || {}).label || '');
+    document.title = 'Finance · ' + (cur.label || '');
   }
+
+  // the sidebar: every section, and Sign out at the bottom. It slides in over the page from the left.
+  function setMenu(open) {
+    document.body.classList.toggle('menu-on', open);
+    $('#scrim').hidden = !open;
+    $('#side').setAttribute('aria-hidden', String(!open));
+    $('#menuBtn').setAttribute('aria-expanded', String(open));
+    if (open) { const c = $('#nav [aria-current]'); if (c) c.focus({ preventScroll: true }); }
+  }
+  $('#menuBtn').onclick = () => setMenu(!document.body.classList.contains('menu-on'));
+  $('#scrim').onclick = () => setMenu(false);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('menu-on')) setMenu(false); });
 
   function vLogin() {
     return `<div class="login"><form id="loginForm" class="float login-card" novalidate>
@@ -64,10 +81,10 @@
     const b = e.target.closest('[data-act]');
     if (!b || b.disabled || !FIN) return;
     const act = b.dataset.act;
-    if (act.startsWith('fin-')) { e.preventDefault(); FIN.act(act, b, e); }
+    if (act.startsWith('fin-')) { e.preventDefault(); if (act === 'fin-sub') setMenu(false); FIN.act(act, b, e); }
   });
   $('#addBtn').onclick = () => { if (FIN && S.user) FIN.add(); };
-  $('#signOut').onclick = () => sb.auth.signOut();
+  $('#signOut').onclick = () => { setMenu(false); sb.auth.signOut(); };
 
   FIN = window.POSFinance({ sb, toast, esc, clamp, rerender: render, canSave: () => !!S.user });
 
