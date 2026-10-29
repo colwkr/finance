@@ -104,10 +104,14 @@ dialog#finSheet::backdrop{background:rgba(40,16,30,.3)}
 .f input,#finSheet .f select{border-radius:18px!important}
 
 /* Accounts: a glossy see-through card for each account, in Regions' order: Bills, Spend, Savings, Credit card */
-.fin .acct-page{max-width:520px;gap:28px;margin:0 auto}
-.fin .acards{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
-.fin .acard{--tint:255,255,255;position:relative;overflow:hidden;isolation:isolate;aspect-ratio:1.62;border:0;border-radius:24px;padding:20px 22px 18px;
-  display:grid;grid-template-rows:auto auto 1fr auto;text-align:left;color:#fff;cursor:pointer;
+/* No scrolling: the four cards share exactly the height between the menu button and the home bar, whatever the phone.
+   Charges to approve, when there are any, sit below them. */
+.fin-scroll:has(.acct-page){padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)!important}
+.fin .acct-page{max-width:520px;width:100%;gap:28px;margin:0 auto}
+.fin .acards{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:12px;
+  height:min(calc(100dvh - env(safe-area-inset-top,0px) - 64px - env(safe-area-inset-bottom,0px) - 12px),1000px);min-height:440px}
+.fin .acard{--tint:255,255,255;position:relative;overflow:hidden;isolation:isolate;min-height:0;border:0;border-radius:24px;padding:clamp(12px,2.2dvh,20px) 22px;
+  display:grid;grid-template-rows:auto 1fr auto auto;text-align:left;color:#fff;cursor:pointer;
   background:
     linear-gradient(115deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,.08) 38%,rgba(255,255,255,0) 52%,rgba(255,255,255,.1) 78%,rgba(255,255,255,.22) 100%),
     radial-gradient(90% 120% at 100% 100%,rgba(var(--tint),.55),rgba(var(--tint),0) 70%),
@@ -122,21 +126,20 @@ dialog#finSheet::backdrop{background:rgba(40,16,30,.3)}
 .fin .acard.r-savings{--tint:255,214,170;order:2}
 .fin .acard.r-credit{--tint:60,36,52;order:3}
 .fin .acard:active{transform:scale(.985)}
-.fin .acard-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.fin .acard-name{font:500 17px/1.2 var(--font);letter-spacing:.01em}
-.fin .acard-kind{font:400 12px/1 var(--font);color:rgba(255,255,255,.75);letter-spacing:.08em;text-transform:uppercase}
-.fin .acard-chip{margin-top:14px;display:flex;align-items:center;gap:12px}
-.fin .acard-chip i{display:block;width:40px;height:30px;border-radius:7px;
+.fin .acard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.fin .acard-name{display:flex;flex-direction:column;gap:4px;font:500 17px/1.2 var(--font);letter-spacing:.01em}
+.fin .acard-kind{font:400 11px/1 var(--font);color:rgba(255,255,255,.75);letter-spacing:.08em;text-transform:uppercase}
+.fin .acard-chip{display:flex;align-items:center;gap:10px}
+.fin .acard-chip i{display:block;width:38px;height:28px;border-radius:7px;
   background:linear-gradient(135deg,rgba(255,236,190,.95),rgba(214,178,110,.85) 50%,rgba(255,226,170,.9));
   box-shadow:inset 0 0 0 1px rgba(120,80,20,.25),inset 0 0 0 7px rgba(255,255,255,.12)}
 .fin .acard-chip svg{width:22px;height:22px;stroke:rgba(255,255,255,.85);fill:none;stroke-width:1.6;stroke-linecap:round}
-.fin .acard-bal{align-self:end;font:300 40px/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;gap:8px;
+.fin .acard-bal{align-self:end;font:300 clamp(30px,4.6dvh,42px)/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:baseline;gap:8px;
   text-shadow:0 1px 12px rgba(60,20,40,.25)}
 .fin .acard-bal .cents{opacity:.7;font-size:.6em}
 .fin .acard-bal small{font-size:14px;font-weight:400;color:rgba(255,255,255,.8)}
-.fin .acard-num{margin-top:12px;font:400 15px/1 var(--font);letter-spacing:.22em;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums;
+.fin .acard-num{margin-top:clamp(6px,1.2dvh,12px);font:400 14px/1 var(--font);letter-spacing:.22em;color:rgba(255,255,255,.88);font-variant-numeric:tabular-nums;
   text-shadow:0 1px 0 rgba(0,0,0,.18)}
-@media (max-width:370px){ .fin .acard-bal{font-size:34px} }
 /* what needs approval, under the cards */
 .fin .acct-page .chip{border-radius:999px!important;background:rgba(255,255,255,.16)!important;color:#fff}
 

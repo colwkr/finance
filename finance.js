@@ -1138,8 +1138,8 @@ window.POSFinance = function (ctx) {
     const card = a => {
       const credit = a.type === 'credit', num = (a.last4 || [])[0], r = role(a);
       return `<button type="button" class="acard r-${r}" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(acctBalance(a))}. Update the balance`)}">
-        <span class="acard-top"><span class="acard-name">${esc(a.name)}</span><span class="acard-kind">${credit ? 'Credit' : a.type === 'savings' ? 'Savings' : 'Debit'}</span></span>
-        <span class="acard-chip" aria-hidden="true"><i></i><svg viewBox="0 0 24 24"><path d="M8 7.5a6.5 6.5 0 0 1 0 9M11.5 5.5a9.5 9.5 0 0 1 0 13M15 3.5a12.5 12.5 0 0 1 0 17"/></svg></span>
+        <span class="acard-top"><span class="acard-name">${esc(a.name)}<span class="acard-kind">${credit ? 'Credit' : a.type === 'savings' ? 'Savings' : 'Debit'}</span></span>
+          <span class="acard-chip" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 7.5a6.5 6.5 0 0 1 0 9M11.5 5.5a9.5 9.5 0 0 1 0 13M15 3.5a12.5 12.5 0 0 1 0 17"/></svg><i></i></span></span>
         <span class="acard-bal">${big(acctBalance(a))}${credit ? '<small>owed</small>' : ''}</span>
         <span class="acard-num">${num ? `••••&ensp;••••&ensp;••••&ensp;${esc(num)}` : '&nbsp;'}</span>
       </button>`;
