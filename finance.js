@@ -282,6 +282,8 @@ window.POSFinance = function (ctx) {
       .sort((x, y) => Math.abs(x.due - t.at) - Math.abs(y.due - t.at)).map(x => x.b);
   }
 
+  // which color an account wears: spend (green), bills (blue), savings (pink), credit (orange)
+  const acctRole = a => (!a ? 'none' : a.type === 'credit' ? 'credit' : a.type === 'savings' ? 'savings' : a.id === 'acct-bills' || /bill/i.test(a.name) ? 'bills' : 'spend');
   function acctLabel(a) {
     if (!a) return 'Removed account';
     const l4 = (a.last4 || [])[0];
@@ -1131,12 +1133,13 @@ window.POSFinance = function (ctx) {
     // each account as its card: its name, its number and what's in it, as the bank shows it. Tap one to set the balance.
     // Charges still to sort sit under the cards.
     const todo = inbox(), accts = sorted(S.accounts.filter(a => !isThing(a)));
+    // the spending account leads, wide; bills and savings share a row; the credit card closes it out, wide
+    const role = acctRole;
     const card = a => {
-      const credit = a.type === 'credit', num = (a.last4 || [])[0];
-      return `<button type="button" class="acard t-${esc(a.type)}${a.id === 'acct-bills' || /bill/i.test(a.name) ? ' is-bills' : ''}" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(acctBalance(a))}. Update the balance`)}">
-        <span class="acard-top"><b>${esc(a.name)}</b>${a.type === 'savings' ? '' : '<i class="dc-chip"></i>'}</span>
-        <span class="acard-bal">${big(acctBalance(a))}</span>
-        <span class="acard-foot"><span>${num ? '•••• ' + esc(num) : ''}</span><span>${credit ? 'Owed' : a.type === 'savings' ? 'Savings' : 'Checking'}</span></span>
+      const credit = a.type === 'credit', num = (a.last4 || [])[0], r = role(a);
+      return `<button type="button" class="acard r-${r}" data-act="fin-form" data-form="account" data-id="${esc(a.id)}"${canSave() ? '' : ' disabled'} aria-label="${esc(`${a.name}${credit ? ', owed' : ''}: ${fmt(acctBalance(a))}. Update the balance`)}">
+        <span class="acard-top"><span class="acard-name">${esc(a.name)}</span>${num ? `<span class="acard-num">•• ${esc(num)}</span>` : ''}</span>
+        <span class="acard-bal">${big(acctBalance(a))}${credit ? '<small>owed</small>' : ''}</span>
       </button>`;
     };
     const cards = accts.length ? `<div class="acards">${accts.map(card).join('')}</div>`
@@ -1233,7 +1236,7 @@ window.POSFinance = function (ctx) {
       from.map(a => opt(a.id, a.name, b.accountId === a.id))).join('');
     const dis = canSave() ? '' : ' disabled';
     const yearNote = yearly(b) ? `<span class="pill">${esc(renewText(b))}</span>` : '';
-    return `<div class="bill-card st-${s.st}${paid ? ' is-paid' : ''}" data-bill="${id}">
+    return `<div class="bill-card st-${s.st}${paid ? ' is-paid' : ''} r-${acctRole(b.accountId ? acct(b.accountId) : null)}" data-bill="${id}">
       <div class="bc-top">
         <div class="bc-names">
           <input class="bc-title" data-bill-field="title" value="${esc(title)}" placeholder="What it’s for" maxlength="40" aria-label="What ${esc(company)} is for"${dis}>
