@@ -1,20 +1,28 @@
 // Finance, on its own: the same records Nerve keeps (Supabase table fin_docs), signed in with the Nerve account.
 // finance.js draws every page; this file is the frame around it: sign-in, the section tabs, taps and the toast.
 (function () {
-  // On an iPhone home-screen app, iOS can shift the page up under the status bar yet report the screen that much shorter,
-  // so anything sized "100%" stops short and leaves a bare strip at the bottom. When the reported height plus the top inset
-  // still fits the screen, that's the shortfall: everything is sized to the full height (--appH) instead.
-  const probe = document.createElement('div');
-  probe.style.cssText = 'position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)';
-  document.documentElement.appendChild(probe);
-  function fitScreen() {
-    const standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
-    const top = probe.offsetHeight, short = standalone && innerHeight >= innerWidth && top > 0 && innerHeight + top <= screen.height;
-    document.documentElement.style.setProperty('--appH', (short ? innerHeight + top : innerHeight) + 'px');
-  }
+  // Everything is sized to the visible height (--appH), measured here, so the page always ends at the screen's bottom edge.
+  const fitScreen = () => document.documentElement.style.setProperty('--appH', innerHeight + 'px');
   fitScreen();
   addEventListener('resize', fitScreen);
   addEventListener('orientationchange', () => setTimeout(fitScreen, 250));
+
+  // GitHub Pages lets a phone keep the page cached for up to 10 minutes, so a home-screen app could keep running an
+  // older build. On open (and coming back to it), ask for version.json fresh; when it's newer, load that build.
+  async function checkVersion() {
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      const { v } = await r.json();
+      // one try per version, so a slow cache can never send it round in a loop
+      let tried = null; try { tried = sessionStorage.getItem('fin.tried'); } catch (e) {}
+      if (v && v !== window.APP_V && tried !== v) {
+        try { sessionStorage.setItem('fin.tried', v); } catch (e) {}
+        location.replace(location.pathname + '?v=' + encodeURIComponent(v));
+      }
+    } catch (e) {}
+  }
+  checkVersion();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
 
   const SB_URL = 'https://dejcovbqwlrvniitbdqv.supabase.co';
   const SB_KEY = 'sb_publishable_VB-KHKnNz_J5EKWvHKW9Ew_7B2sI6Zg';
