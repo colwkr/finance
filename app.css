@@ -112,9 +112,46 @@ body.menu-on .fa-fab{visibility:hidden}
 .fin .tx-pending .sec-head .meta{font-size:12.5px;color:var(--ink-2)}
 .fin .tx-done{padding-top:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
 .fin .tx-clear{display:flex;align-items:center;gap:8px;margin-bottom:26px;font-size:14px;color:var(--ink-2)}
-/* Accounts with charges to confirm: the cards give up 58pt for one button that opens Activity */
-.fin .acct-page.has-todo{gap:10px}
-.fin .acct-page.has-todo .acards{height:min(calc(var(--appH,100dvh) - var(--envT) - 64px - var(--envB) - 12px - 58px),940px);min-height:400px}
+/* Accounts, top to bottom on one screen: safe to spend (112pt), the four cards sharing what's left, and, when charges
+   are waiting, one button (48pt) that opens Activity */
+.fin .acct-page{gap:10px!important}
+.fin .acards{height:min(calc(var(--appH,100dvh) - var(--envT) - 64px - var(--envB) - 12px - 122px),880px)!important;min-height:380px!important}
+.fin .acct-page.has-todo .acards{height:min(calc(var(--appH,100dvh) - var(--envT) - 64px - var(--envB) - 12px - 122px - 58px),820px)!important;min-height:340px!important}
+.fin .safe{position:relative;overflow:hidden;height:112px;flex:none;display:flex;flex-direction:column;justify-content:space-between;width:100%;padding:13px 18px 12px;border:0;border-radius:26px;
+  text-align:left;color:#fff;cursor:pointer;
+  background:linear-gradient(115deg,rgba(255,255,255,.4),rgba(255,255,255,.12) 45%,rgba(255,255,255,.2));
+  -webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 0 0 1px rgba(255,255,255,.4),0 20px 40px -22px rgba(40,10,25,.7)}
+.fin .safe.short{background:radial-gradient(90% 140% at 15% 10%,rgba(255,170,150,.75),rgba(255,107,79,.55) 55%,rgba(228,71,47,.6))}
+.fin .safe-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.fin .safe-lab{font:500 15px/1 var(--font)}
+.fin .safe-when{font:400 13px/1 var(--font);color:rgba(255,255,255,.82)}
+.fin .safe-fig{font:300 44px/1 var(--font);letter-spacing:-.02em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.fin .safe-fig .cents{opacity:.65;font-size:.55em}
+.fin .safe-fig small{font-size:15px;font-weight:500}
+.fin .safe-how{font:400 12.5px/1.2 var(--font);color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fin .safe:active{transform:scale(.985)}
+/* a card that has to get short keeps its name, balance and number and drops the rest */
+.fin .acard{container-type:size}
+@container (max-height:140px){
+  .fin .acard-kind{display:none}
+  .fin .acard-bal{font-size:32px!important}
+  .fin .acard-num{margin-top:6px!important;font-size:13px!important}
+  .fin .acard-chip i{width:32px;height:24px}
+}
+@container (max-height:112px){ .fin .acard{padding-top:10px!important;padding-bottom:10px!important} .fin .acard-bal{font-size:28px!important} }
+/* the safe-to-spend sheet */
+#finSheet .sb-list{display:flex;flex-direction:column;border-radius:18px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);overflow:hidden}
+#finSheet .sb-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px}
+#finSheet .sb-line + .sb-line{box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+#finSheet .sb-l{display:flex;flex-direction:column;gap:2px;min-width:0}
+#finSheet .sb-l span{font-size:15px}
+#finSheet .sb-l small{font-size:12px;color:var(--ink-2)}
+#finSheet .sb-a{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#finSheet .sb-line.minus .sb-a{color:#ffd0c4}
+#finSheet .sb-total{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px}
+#finSheet .sb-total span{font-size:15px;color:var(--ink-2)}
+#finSheet .sb-total b{font-size:28px;font-weight:300;font-variant-numeric:tabular-nums}
 .fin .acct-todo{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:0 16px;border:0;border-radius:24px;cursor:pointer;color:#fff;font:500 15px/1 var(--font);text-align:left;
   background:radial-gradient(80% 120% at 20% 20%,#ff9a80,var(--accent) 60%,var(--accent-2));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 12px 26px -12px rgba(150,30,20,.6)}
 .fin .acct-todo span{flex:1}

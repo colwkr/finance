@@ -1136,6 +1136,54 @@ window.POSFinance = function (ctx) {
   }
 
   // the overview: how you're doing, in pictures. The month arrows move what it went on, its days and its pay together.
+  /* ---------- safe to spend: what's really yours until the next paycheck ----------
+     checking (every checking account, as the bank shows it) minus the bills still to come out of checking before the
+     next payday (unpaid, this month, overdue ones included) minus what the credit card owes minus the floor you keep.
+     A bill with no day can't be placed, so it's named instead of counted. The floor lives on the spending account. */
+  const floorAcct = () => sorted(S.accounts.filter(a => a.type === 'checking')).find(a => acctRole(a) === 'spend') || sorted(S.accounts.filter(a => a.type === 'checking'))[0] || null;
+  function nextPayday() {
+    const today = startOfDay(Date.now());
+    let best = null;
+    for (const inc of S.income.filter(i => !i.example)) for (let off = 0; off <= 2; off++) for (const p of paydays(inc, mkAdd(curMk(), off))) {
+      if (p.at < today || payState(inc, p).st === 'got') continue;
+      if (!best || p.at < best.at) best = { at: p.at, key: p.key, inc };
+    }
+    return best;
+  }
+  function safeToSpend() {
+    const checking = sorted(S.accounts.filter(a => a.type === 'checking'));
+    const have = checking.reduce((t, a) => t + acctBalance(a), 0);
+    const pay = nextPayday(), until = pay ? pay.at : startOfDay(Date.now()) + 14 * DAY;
+    const fromChecking = b => { const a = b.accountId ? acct(b.accountId) : null; return !a || a.type === 'checking'; };
+    const due = [], noDay = [];
+    for (const b of S.bills) {
+      if (!fromChecking(b) || !b.amount) continue;
+      if (!b.day) { if (!yearly(b)) noDay.push(b); continue; }
+      const n = new Date();
+      for (let off = 0; off <= 2; off++) {
+        const y = n.getFullYear(), m = n.getMonth() + off, d = dueOn(b, y, m), mk = monthKeyOf(y, m);
+        if (d == null || d >= until) continue;
+        if (paidIn(b, mk) || !appliesIn(b, y, m)) continue;
+        due.push({ b, at: d });
+      }
+    }
+    due.sort((x, y) => x.at - y.at);
+    const bills = due.reduce((t, x) => t + x.b.amount, 0);
+    const owed = S.accounts.filter(a => a.type === 'credit').reduce((t, a) => t + Math.max(0, acctBalance(a)), 0);
+    const fa = floorAcct(), floor = fa && fa.floor ? fa.floor : 0;
+    return { checking, have, pay, due, bills, owed, floor, noDay, safe: have - bills - owed - floor };
+  }
+  function safeCard() {
+    const s = safeToSpend(), neg = s.safe < 0;
+    const when = s.pay ? `until payday ${shortDay.format(s.pay.at)}` : 'over the next two weeks';
+    const parts = [`${fmt(s.have)} checking`, s.bills ? `${fmt(s.bills)} bills` : '', s.owed ? `${fmt(s.owed)} card` : '', s.floor ? `${fmt(s.floor)} floor` : ''].filter(Boolean);
+    return `<button type="button" class="safe${neg ? ' short' : ''}" data-act="fin-form" data-form="safe"${canSave() ? '' : ' disabled'} aria-label="${esc(`Safe to spend ${when}: ${neg ? 'short ' + fmt(-s.safe) : fmt(s.safe)}. Show how it's worked out`)}">
+      <span class="safe-top"><span class="safe-lab">Safe to spend</span><span class="safe-when">${esc(when)}</span></span>
+      <span class="safe-fig">${neg ? '−' : ''}${big(Math.abs(s.safe))}${neg ? '<small>short</small>' : ''}</span>
+      <span class="safe-how">${esc(parts.join(' − '))}${s.floor ? '' : ' · no floor set'}</span>
+    </button>`;
+  }
+
   function vHome() {
     // each account as its card: its name, its number and what's in it, as the bank shows it. Tap one to set the balance.
     // Charges still to sort sit under the cards.
@@ -1156,7 +1204,7 @@ window.POSFinance = function (ctx) {
     // charges waiting to be confirmed: one button under the cards that opens Activity, so Accounts never scrolls
     const n = inbox().length;
     const todo = n ? `<button type="button" class="acct-todo" data-act="fin-sub" data-sub="activity">${ICON.clock}<span>${n} ${n === 1 ? 'charge' : 'charges'} to confirm</span>${ICON.chev}</button>` : '';
-    return `<div class="fin-page acct-page${n ? ' has-todo' : ''}">${cards}${todo}</div>`;
+    return `<div class="fin-page acct-page${n ? ' has-todo' : ''}">${accts.length ? safeCard() : ''}${cards}${todo}</div>`;
   }
 
   // A list of bills for layouts, filtered. filter.status: 'upcoming' (not paid, due or late this month, or due within
@@ -1620,6 +1668,14 @@ window.POSFinance = function (ctx) {
     if (to === '_misc') { const m = await ensureMisc(); if (!m) return; to = m; }
     sortTxn(id, to);
   }
+  // the safe-to-spend sheet: the total follows the floor as you type it
+  document.addEventListener('input', e => {
+    if (!e.target || e.target.id !== 'ff_floor') return;
+    const s = safeToSpend(), typed = parseMoney(e.target.value.trim() || '0'), out = $('#ff_safe');
+    if (typed === null || !out) return;
+    const v = s.safe + s.floor - typed;
+    out.textContent = (v < 0 ? '−' : '') + fmt(Math.abs(v));
+  });
   // Miscellaneous is the catch-all every charge can fall back to, so it always exists
   let makingMisc = null;
   async function ensureMisc() {
@@ -1838,6 +1894,25 @@ window.POSFinance = function (ctx) {
           + '<p class="where">A payday on a Saturday or Sunday comes the Friday before. When the deposit shows up, it checks that payday off instead of counting twice.</p>',
       };
     },
+    // safe to spend, line by line: what's in checking, each bill before payday, the card, the floor (set here)
+    safe() {
+      const s = safeToSpend();
+      const line = (label, amount, sign, sub) => `<div class="sb-line${sign === '−' ? ' minus' : ''}"><span class="sb-l"><span>${label}</span>${sub ? `<small>${sub}</small>` : ''}</span><span class="sb-a">${sign}${esc(fmt(amount))}</span></div>`;
+      const today = startOfDay(Date.now());
+      const rows = [
+        ...s.checking.map(a => line(esc(acctLabel(a)), acctBalance(a), '', 'Checking, as the bank shows it')),
+        ...s.due.map(x => line(esc(billTitle(x.b) || billCompany(x.b)), x.b.amount, '−', esc(`${billCompany(x.b)} · ${x.at < today ? 'was due ' : 'due '}${shortDay.format(x.at)} · not paid yet`))),
+        s.owed ? line('Credit card owed', s.owed, '−', 'Paid from checking') : '',
+      ].join('');
+      return {
+        title: 'Safe to spend', del: false,
+        body: `<p class="where">${s.pay ? `Until your next paycheck, <b>${esc(s.pay.inc.name)}</b> on <b>${esc(dayFmt.format(s.pay.at))}</b>.` : 'No paycheck set up, so this covers the next two weeks.'}</p>
+          <div class="sb-list">${rows}</div>
+          ${field('Keep at least (your floor)', `<input id="ff_floor" class="amount" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${s.floor ? plain(s.floor) : ''}">`, 'Money you never count as spendable. It comes off the number above.')}
+          <div class="sb-total"><span>Safe to spend</span><b id="ff_safe">${s.safe < 0 ? '−' : ''}${esc(fmt(Math.abs(s.safe)))}</b></div>
+          ${s.noDay.length ? `<p class="where">Not counted: ${s.noDay.map(b => `<b>${esc(billTitle(b) || billCompany(b))}</b> (${esc(fmt(b.amount))}, no due day)`).join(', ')}. Give ${s.noDay.length === 1 ? 'it' : 'them'} a day on Bills &amp; subs and ${s.noDay.length === 1 ? 'it counts' : 'they count'}.</p>` : ''}`,
+      };
+    },
     account(id, extra) {
       const a = id ? acct(id) : null;
       const type = a ? a.type : (extra.type || 'checking'), thing = type === 'asset';
@@ -2039,6 +2114,13 @@ window.POSFinance = function (ctx) {
       if (now) await linkBill(now, { ...data, id }, false);
       if (data.bucketId && !now && data.bucketId !== '_none' && (!old || old.bucketId !== data.bucketId)) learnMerchant(data.bucketId, data);
       return true;
+    },
+    async safe() {
+      const text = val('ff_floor').trim(), floor = text ? parseMoney(text) : 0;
+      if (floor === null) return fail('Enter an amount, like 200 or 200.00, or leave it blank.');
+      const a = floorAcct();
+      if (!a) return fail('Add a checking account first.');
+      return (a.floor || 0) === floor ? true : save(refs.accounts.doc(a.id).update({ floor }));
     },
     async account() {
       const name = val('ff_name').trim();
