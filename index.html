@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" data-noir data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Finance">
+<meta name="theme-color" content="#050505">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Finance</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<link rel="stylesheet" href="base.css?v=1">
+<link rel="stylesheet" href="finance.css?v=1">
+<link rel="stylesheet" href="sections.css?v=1">
+<link rel="stylesheet" href="noir.css?v=1">
+<link rel="stylesheet" href="app.css?v=1">
+<script src="wheels.js?v=1"></script>
+<script src="finance.js?v=1"></script>
+</head>
+<body>
+<div id="bg" aria-hidden="true"><div class="wall"></div></div>
+<div class="app">
+  <header class="top fa-top">
+    <h1 id="title">Finance</h1>
+    <div class="right">
+      <button type="button" class="win-add" id="addBtn" aria-label="Add" title="Add" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
+      <button type="button" class="link" id="signOut" hidden>Sign out</button>
+    </div>
+  </header>
+  <nav class="fa-tabs" id="tabs" aria-label="Sections" hidden></nav>
+  <main id="view"></main>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="app.js?v=1"></script>
+</body>
+</html>

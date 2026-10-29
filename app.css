@@ -1,0 +1,60 @@
+/* Finance on its own: the frame around Nerve's finance pages */
+.app{max-width:1180px}
+.fa-top h1{font-size:22px;font-weight:300;letter-spacing:-.01em;color:var(--ink);margin:0}
+.fa-top .right{display:flex;align-items:center;gap:12px}
+.fa-top .link{font-size:12.5px}
+
+/* section tabs: one row that scrolls sideways on a phone */
+.fa-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-8px -18px 0;padding:2px 18px 4px;flex:none}
+.fa-tabs::-webkit-scrollbar{display:none}
+.fa-tabs button{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:8px 14px;min-height:38px;white-space:nowrap;
+  background:var(--control);color:var(--ink-2);font:500 13px/1 var(--font);box-shadow:inset 0 0 0 1px var(--glass-border)}
+.fa-tabs button .i{width:16px;height:16px}
+.fa-tabs button[aria-current="page"]{background:var(--ink);color:var(--bg, #050505);box-shadow:none}
+.fa-tabs button em{font-style:normal;font-size:10.5px;min-width:18px;height:18px;border-radius:9px;display:inline-grid;place-items:center;padding:0 5px;background:var(--bad);color:#fff}
+
+/* Overview: just the accounts */
+.fin .ov-simple{max-width:640px}
+.fin .ov-simple .ac{padding:16px 16px 10px}
+
+/* Bills & subs: a card per bill, side by side columns on a wide screen */
+.fin .bills-two{gap:22px}
+@container fin (min-width:820px){ .fin .bills-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start} }
+@container fin (max-width:819.9px){ .fin .bills-two > div{display:block} }
+.fin .bill-cards{display:flex;flex-direction:column;gap:10px}
+.fin .bill-card{background:var(--panel, var(--control));border-radius:22px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px;
+  box-shadow:inset 0 0 0 1px var(--glass-border),var(--lift-sm)}
+.fin .bill-card.is-paid{opacity:.62}
+.fin .bc-top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:start}
+.fin .bc-names{display:flex;flex-direction:column;min-width:0}
+.fin .bc-names input{border:0;background:none;color:var(--ink);font-family:var(--font);padding:2px 6px;margin:0 -6px;border-radius:8px;min-width:0;width:100%}
+.fin .bc-names input:hover{background:var(--well)}
+.fin .bc-names input:focus{outline:none;background:var(--well)}
+.fin .bc-title{font-size:17px;font-weight:500;letter-spacing:-.005em}
+.fin .bc-co{font-size:13px;color:var(--ink-2) !important}
+.fin .bc-st{padding-top:4px}
+.fin .bc-more{width:32px;height:32px}
+.fin .bc-more .i{width:16px;height:16px}
+
+/* the pill dropdowns: day, account, amount, paid */
+.fin .bc-pills{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fin .pick{position:relative;display:inline-flex;align-items:center;gap:2px;border:0;border-radius:999px;min-height:36px;padding:0 12px;
+  background:var(--well);color:var(--ink);font:500 13px/1 var(--font);box-shadow:inset 0 0 0 1px var(--glass-border)}
+.fin .pick select{appearance:none;-webkit-appearance:none;border:0;background:none;color:inherit;font:inherit;padding:10px 16px 10px 0;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:right 4px center,right 0 center;background-size:4px 4px,4px 4px;background-repeat:no-repeat}
+.fin .pick select option{background:#151515;color:#eee}
+.fin .pick.money span{color:var(--ink-2)}
+.fin .pick.money input{border:0;background:none;color:inherit;font:inherit;width:7ch;padding:10px 0;font-variant-numeric:tabular-nums}
+.fin .pick.money input:focus{outline:none}
+.fin .pick:focus-within{box-shadow:inset 0 0 0 1.5px var(--ink-2)}
+.fin .paid-pick{gap:6px;cursor:pointer;margin-left:auto}
+.fin .paid-pick .i{width:15px;height:15px;opacity:.35}
+.fin .paid-pick[aria-pressed="true"]{background:var(--ink);color:var(--bg, #050505)}
+.fin .paid-pick[aria-pressed="true"] .i{opacity:1}
+.fin .bill-cards .add-row{border-radius:22px;padding:14px 16px}
+@media (max-width:420px){
+  .fin .paid-pick{margin-left:0}
+  .fin .bc-top{grid-template-columns:minmax(0,1fr) auto}
+  .fin .bc-st{grid-row:2;grid-column:1;padding-top:0}
+}
