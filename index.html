@@ -15,15 +15,15 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>Finance</title>
-<script>window.APP_V = '20261029195829';</script>
+<script>window.APP_V = '20261029204207';</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200..700&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<link rel="stylesheet" href="base.css?v=20261029195829">
-<link rel="stylesheet" href="finance.css?v=20261029195829">
-<link rel="stylesheet" href="sections.css?v=20261029195829">
-<link rel="stylesheet" href="app.css?v=20261029195829">
-<script src="wheels.js?v=20261029195829"></script>
-<script src="finance.js?v=20261029195829"></script>
+<link rel="stylesheet" href="base.css?v=20261029204207">
+<link rel="stylesheet" href="finance.css?v=20261029204207">
+<link rel="stylesheet" href="sections.css?v=20261029204207">
+<link rel="stylesheet" href="app.css?v=20261029204207">
+<script src="wheels.js?v=20261029204207"></script>
+<script src="finance.js?v=20261029204207"></script>
 </head>
 <body>
 <div id="bg" aria-hidden="true"><div class="wall"></div></div>
@@ -33,13 +33,24 @@
   </header>
   <main id="view"></main>
 </div>
+<!-- the edge tab: grows out of the phone's edge on the side of the hand holding it (app.js) -->
+<nav class="fa-rail" id="edge" aria-label="Quick sections" hidden></nav>
 <div class="fa-scrim" id="scrim" hidden></div>
 <aside class="fa-side" id="side" aria-label="Sections" aria-hidden="true">
   <nav class="fa-nav" id="nav"></nav>
+  <div class="fa-hand" role="radiogroup" aria-label="Edge tab side">
+    <span class="fa-hand-lab">Edge tab</span>
+    <div class="fa-hand-seg">
+      <button type="button" role="radio" data-hand="auto" aria-checked="false">Auto</button>
+      <button type="button" role="radio" data-hand="left" aria-checked="false">Left</button>
+      <button type="button" role="radio" data-hand="right" aria-checked="false">Right</button>
+    </div>
+    <span class="fa-hand-note" id="handNote"></span>
+  </div>
   <button type="button" class="fa-out" id="signOut"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5H7A1.5 1.5 0 0 0 5.5 6v12A1.5 1.5 0 0 0 7 19.5h7M10 12h9.5M16.5 9l3 3-3 3"/></svg><span>Sign out</span></button>
 </aside>
 <button type="button" class="fa-fab" id="addBtn" aria-label="Add" hidden><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
 <div id="toast" class="toast" role="status" hidden></div>
-<script src="app.js?v=20261029195829"></script>
+<script src="app.js?v=20261029204207"></script>
 </body>
 </html>

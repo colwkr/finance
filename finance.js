@@ -37,7 +37,8 @@ window.POSFinance = function (ctx) {
     return m[1] ? -cents : cents;
   }
 
-  const SUBS = { home: 'Accounts', bills: 'Bills & subs', loans: 'Loans', savings: 'Savings', lists: 'Lists', spending: 'Spending', activity: 'Activity' };
+  // in this order down the edge tab and the menu
+  const SUBS = { home: 'Accounts', activity: 'Activity', bills: 'Bills & subs', spending: 'Spending', savings: 'Savings', loans: 'Loans', lists: 'Lists' };
   const S = { loaded: false, failed: false, accounts: [], buckets: [], txns: [], bills: [], loans: [], income: [], months: [], worth: [], sub: 'home', open: new Set(), confirmClear: false, ovMk: null, spMk: null, day: null, nw: 'net' };
   try { const t = localStorage.getItem('pos.fin.sub'); if (SUBS[t]) S.sub = t; const w = localStorage.getItem('pos.fin.nw'); if (w) S.nw = w; } catch (e) {}
   let F = null; // the form currently in the sheet
@@ -2548,5 +2549,15 @@ window.POSFinance = function (ctx) {
   // for the quiet Home: a bill on the day it's due (not paid yet), or late
   const homeBills = () => (S.loaded ? S.bills.map(b => ({ b, s: billState(b) })).filter(x => x.s.st === 'late' || (x.s.st === 'waiting' && x.s.days === 0))
     .map(x => ({ id: x.b.id, name: x.b.name, short: x.b.amount ? fmtShort(x.b.amount) : '', late: x.s.st === 'late', days: x.s.days || 0 })) : []);
-  return { view, side, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney, goals, listMatches, homeBills };
+  // the numbers on the edge tab (app.js): this month's bills paid of those due, how much of the monthly limits is
+  // used (confirmed charges only), and the charges waiting to be confirmed
+  function railStats() {
+    if (!S.loaded) return null;
+    const n = new Date(), y = n.getFullYear(), m = n.getMonth(), mk = curMk();
+    const due = S.bills.filter(b => dueOn(b, y, m) != null && appliesIn(b, y, m));
+    const limits = kind('limit').filter(l => limitFor(l));
+    const cap = limits.reduce((t, l) => t + limitFor(l), 0), spent = limits.reduce((t, l) => t + limitSpent(l, mk), 0);
+    return { billsPaid: due.filter(b => paidIn(b, mk)).length, billsDue: due.length, spendUsed: cap ? spent / cap : 0, toConfirm: inbox().length };
+  }
+  return { view, side, act, add, badge, start, stop, sheetOpen, billsOn, moveBill, carMoney, goals, listMatches, homeBills, railStats };
 };

@@ -80,7 +80,158 @@
     view.innerHTML = FIN.view();
     const sc2 = $('#finScroll'); if (sc2) sc2.scrollTop = top;
     document.title = 'Finance · ' + (cur.label || '');
+    renderRail(side);
   }
+
+  /* ---------- the edge notch ----------
+     Every section has a slot down the edge of the screen, in order (Accounts, Activity, Bills, Spending, Savings, Loans,
+     Lists). The slots are invisible; only the one you're in shows, as a black notch grown out of the bezel with its
+     icon and number. Press and slide the notch up or down: it follows your thumb from slot to slot, a label says where
+     you are, and letting go there moves the page: going down, this page slides up off the screen and the next rises in
+     from the bottom (going up, the other way). A tap opens the menu. */
+  const SLOT = 64;
+  const ring = (frac, color) => {
+    const C = 2 * Math.PI * 17, f = Math.max(0, Math.min(1, frac || 0));
+    return `<svg class="rl-ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" class="rl-track"/>${f ? `<circle cx="20" cy="20" r="17" class="rl-fill" style="stroke:${color}" stroke-dasharray="${(f * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 20 20)"/>` : ''}</svg>`;
+  };
+  let RAIL = { keys: [], labels: [], cur: 0 };
+  // what the notch shows for a section: its icon, inside a ring or with a count where it has a number to watch
+  function dial(key, side, R) {
+    const icon = `<span class="rl-ic">${(side.items.find(i => i.key === key) || {}).icon || ''}</span>`;
+    if (key === 'bills') return { html: ring(R.billsDue ? R.billsPaid / R.billsDue : 0, '#7fdcff') + icon, lab: `${R.billsPaid}/${R.billsDue}`, say: `${R.billsPaid} of ${R.billsDue} bills paid this month` };
+    if (key === 'spending') { const u = R.spendUsed; return { html: ring(Math.min(1, u), u > 1 ? '#ff6b4f' : u >= 0.85 ? '#ffd34d' : '#4ee08a') + icon, lab: `${Math.round(u * 100)}%`, say: `${Math.round(u * 100)}% of this month's limits used` }; }
+    if (key === 'activity') return { html: ring(R.toConfirm ? 1 : 0, '#ff6b4f') + icon + (R.toConfirm ? `<em>${R.toConfirm}</em>` : ''), lab: R.toConfirm ? `${R.toConfirm} new` : 'All set', say: R.toConfirm ? `${R.toConfirm} to confirm` : 'everything confirmed' };
+    return { html: ring(0) + icon, lab: '', say: '' };
+  }
+  function renderRail(side) {
+    const rail = $('#edge'), R = FIN.railStats ? FIN.railStats() : null;
+    rail.hidden = !S.user || !R;
+    if (rail.hidden) return;
+    RAIL = { keys: side.items.map(i => i.key), labels: side.items.map(i => i.label), cur: Math.max(0, side.items.findIndex(i => i.key === side.current)), side, R };
+    rail.style.setProperty('--slots', RAIL.keys.length);
+    const dd = dial(side.current, side, R), name = RAIL.labels[RAIL.cur];
+    if (!rail.firstChild) rail.innerHTML = '<button type="button" class="rl-notch" id="notch"></button><span class="rl-tip" id="railTip" aria-hidden="true"></span>';
+    const notch = $('#notch');
+    notch.style.setProperty('--i', RAIL.cur);
+    notch.setAttribute('aria-label', `${name}${dd.say ? ': ' + dd.say : ''}. Slide up or down for another section, or tap for the menu`);
+    notch.innerHTML = `<span class="rl-dial">${dd.html}</span>${dd.lab ? `<span class="rl-lab">${esc(dd.lab)}</span>` : ''}`;
+  }
+
+  // sliding the notch
+  let drag = null;
+  document.addEventListener('pointerdown', e => {
+    const notch = e.target.closest && e.target.closest('#notch');
+    if (!notch || !S.user) return;
+    drag = { id: e.pointerId, y0: e.clientY, i0: RAIL.cur, moved: false, at: RAIL.cur };
+    try { notch.setPointerCapture(e.pointerId); } catch (err) {} // keeps the slide going when the thumb leaves the notch
+  });
+  document.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dy = e.clientY - drag.y0;
+    if (!drag.moved && Math.abs(dy) < 6) return;
+    if (!drag.moved) { drag.moved = true; document.body.classList.add('rail-drag'); }
+    e.preventDefault();
+    const max = (RAIL.keys.length - 1) * SLOT, pos = Math.max(0, Math.min(max, drag.i0 * SLOT + dy));
+    const at = Math.round(pos / SLOT), notch = $('#notch');
+    // passing over a slot, the notch takes that section's icon and number
+    if (at !== drag.at) { const dd = dial(RAIL.keys[at], RAIL.side, RAIL.R); notch.innerHTML = `<span class="rl-dial">${dd.html}</span>${dd.lab ? `<span class="rl-lab">${esc(dd.lab)}</span>` : ''}`; }
+    drag.at = at;
+    notch.style.transform = `translateY(${pos}px)`;
+    const tip = $('#railTip');
+    tip.textContent = RAIL.labels[drag.at];
+    tip.style.transform = `translateY(${drag.at * SLOT}px)`;
+  });
+  const endDrag = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null;
+    document.body.classList.remove('rail-drag');
+    const notch = $('#notch');
+    notch.style.transform = '';
+    if (!d.moved) { if (e.type === 'pointerup') setMenu(true); return; }
+    notch.style.setProperty('--i', d.at);
+    if (d.at !== RAIL.cur && e.type === 'pointerup') goTo(RAIL.keys[d.at], d.at > RAIL.cur ? 1 : -1);
+    else renderRail(RAIL.side); // back where it started (or the slide was cancelled): its own icon again
+  };
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+
+  // moving to a section from the notch: this page leaves the way you slid, the next comes in behind it
+  function goTo(sub, dir) {
+    const view = $('#view'), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let ghost = null;
+    if (!still) {
+      const r = view.getBoundingClientRect(), sc = $('#finScroll'), top = sc ? sc.scrollTop : 0;
+      ghost = view.cloneNode(true);
+      ghost.removeAttribute('id');
+      for (const x of ghost.querySelectorAll('[id]')) x.removeAttribute('id');
+      ghost.className = 'fa-ghost';
+      Object.assign(ghost.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+      document.body.appendChild(ghost);
+      const gs = ghost.querySelector('.fin-scroll'); if (gs) gs.scrollTop = top;
+    }
+    FIN.act('fin-sub', { dataset: { sub } });
+    if (ghost) {
+      ghost.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(${-dir * 105}%)`, opacity: 0.35 }], { duration: 420, easing: 'cubic-bezier(.55,0,.75,.2)', fill: 'forwards' }).onfinish = () => ghost.remove();
+      setTimeout(() => ghost.remove(), 700); // and gone for certain, even if the animation never reports finishing
+      view.animate([{ transform: `translateY(${dir * 100}%)`, opacity: 0.3 }, { transform: 'none', opacity: 1 }], { duration: 480, easing: 'cubic-bezier(.2,.85,.25,1)' });
+    }
+  }
+  window.FIN_GOTO = goTo; // for the test kit
+
+  /* ---------- which hand: the tilt picks the side ----------
+     Walking with the phone in your right hand, it leans left (screen turned toward you): the tab goes right, under your
+     thumb. In your left hand it leans right: the tab goes left. The lean has to hold about a second before it moves,
+     and a phone lying flat changes nothing. Auto, Left or Right is set in the sidebar (localStorage fin.hand). */
+  const HAND = { mode: 'auto', side: 'right', motion: 'off' };
+  try { HAND.mode = localStorage.getItem('fin.hand') || 'auto'; HAND.side = localStorage.getItem('fin.side') || 'right'; } catch (e) {}
+  function applyHand() {
+    const side = HAND.mode === 'auto' ? HAND.side : HAND.mode;
+    document.body.dataset.hand = side;
+    for (const b of document.querySelectorAll('.fa-hand-seg button')) b.setAttribute('aria-checked', String(b.dataset.hand === HAND.mode));
+    const note = $('#handNote');
+    note.textContent = HAND.mode !== 'auto' ? `Always on the ${HAND.mode}.`
+      : HAND.motion === 'on' ? `Follows your hand: now on the ${side}.`
+      : HAND.motion === 'ask' ? 'Tap anywhere once to let it follow your hand.'
+      : HAND.motion === 'denied' ? 'Motion access is off in Settings, so it stays on the ' + side + '.'
+      : 'This device has no tilt sensor, so it stays on the ' + side + '.';
+  }
+  let ema = 0, leanSince = 0, leanTo = null;
+  function onTilt(e) {
+    if (e.gamma == null) return;
+    if (HAND.motion !== 'on') { HAND.motion = 'on'; applyHand(); }
+    if (Math.abs(e.beta == null ? 90 : e.beta) < 15) { leanTo = null; return; } // lying flat: no hand to read
+    ema = ema * 0.85 + e.gamma * 0.15;
+    const now = Date.now(), want = ema <= -12 ? 'right' : ema >= 12 ? 'left' : null; // leaning left = right hand
+    if (want !== leanTo) { leanTo = want; leanSince = now; return; }
+    if (want && want !== HAND.side && now - leanSince >= 900) {
+      HAND.side = want;
+      try { localStorage.setItem('fin.side', want); } catch (e2) {}
+      if (HAND.mode === 'auto') applyHand();
+    }
+  }
+  let listening = false;
+  const listen = () => { if (!listening) { listening = true; addEventListener('deviceorientation', onTilt); } };
+  function startMotion() {
+    if (typeof DeviceOrientationEvent === 'undefined') { HAND.motion = 'none'; return applyHand(); }
+    // Listen right away: where access was already given, readings simply start arriving. iOS asks only from a tap, so
+    // while no reading has come, the first tap anywhere asks.
+    listen();
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      HAND.motion = 'ask'; applyHand();
+      const ask = () => {
+        if (HAND.motion !== 'ask') return;
+        DeviceOrientationEvent.requestPermission().then(r => { if (r !== 'granted') HAND.motion = 'denied'; applyHand(); }).catch(() => {});
+      };
+      addEventListener('pointerup', ask, { once: true });
+    } else applyHand();
+  }
+  for (const b of document.querySelectorAll('.fa-hand-seg button')) b.onclick = () => {
+    HAND.mode = b.dataset.hand;
+    try { localStorage.setItem('fin.hand', HAND.mode); } catch (e) {}
+    applyHand();
+  };
+  applyHand();
+  startMotion();
 
   // the sidebar: every section, and Sign out at the bottom. It slides in over the page from the left.
   function setMenu(open) {

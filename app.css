@@ -94,6 +94,54 @@ body.menu-on .fa-side{transform:none;visibility:visible}
 .fa-nav button em{font-style:normal;font-size:11px;min-width:20px;height:20px;border-radius:10px;display:grid;place-items:center;padding:0 6px;background:var(--accent);color:#fff;font-weight:600}
 .fa-out{margin-top:8px}
 
+/* The edge notch: a black tab grown out of the bezel on the side of the hand holding the phone (body[data-hand]).
+   Its slots run down the edge, 64pt each, invisible; the notch sits in the current one (--i) and glides between them.
+   Its top and bottom corners are scooped into the edge (the two radial-gradient fillets), like the bezel itself. */
+.fa-rail{--w:58px;--slot:64px;--fil:22px;position:absolute;z-index:8;width:var(--w);height:calc(var(--slots,7) * var(--slot));
+  top:max(calc(var(--envT) + 130px),calc((var(--appH,100dvh) - var(--slots,7) * var(--slot)) * .56));pointer-events:none}
+body[data-hand="right"] .fa-rail{right:0}
+body[data-hand="left"] .fa-rail{left:0}
+.rl-notch{position:absolute;left:0;top:0;width:var(--w);height:var(--slot);padding:0;border:0;background:#000;color:#fff;cursor:grab;pointer-events:auto;touch-action:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;-webkit-user-select:none;user-select:none;
+  transform:translateY(calc(var(--i,0) * var(--slot)));transition:transform .42s cubic-bezier(.2,.9,.25,1.15)}
+body[data-hand="right"] .rl-notch{border-radius:28px 0 0 28px}
+body[data-hand="left"] .rl-notch{border-radius:0 28px 28px 0}
+.rl-notch::before,.rl-notch::after{content:"";position:absolute;width:var(--fil);height:var(--fil);pointer-events:none}
+.rl-notch::before{bottom:100%}
+.rl-notch::after{top:100%}
+body[data-hand="right"] .rl-notch::before{right:0;background:radial-gradient(circle at 0 0,transparent calc(var(--fil) - .5px),#000 var(--fil))}
+body[data-hand="right"] .rl-notch::after{right:0;background:radial-gradient(circle at 0 100%,transparent calc(var(--fil) - .5px),#000 var(--fil))}
+body[data-hand="left"] .rl-notch::before{left:0;background:radial-gradient(circle at 100% 0,transparent calc(var(--fil) - .5px),#000 var(--fil))}
+body[data-hand="left"] .rl-notch::after{left:0;background:radial-gradient(circle at 100% 100%,transparent calc(var(--fil) - .5px),#000 var(--fil))}
+body.rail-drag .rl-notch{transition:none;cursor:grabbing}
+.rl-dial{position:relative;width:38px;height:38px;display:grid;place-items:center}
+.rl-ring{position:absolute;inset:0;width:100%;height:100%}
+.rl-track{fill:none;stroke:rgba(255,255,255,.18);stroke-width:3}
+.rl-fill{fill:none;stroke-width:3;stroke-linecap:round}
+.rl-ic .i{width:18px;height:18px}
+.rl-dial em{position:absolute;top:-5px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;display:grid;place-items:center;font:600 10px/1 var(--font);font-style:normal;background:var(--accent);color:#fff}
+.rl-lab{font:500 10px/1 var(--font);color:rgba(255,255,255,.85);white-space:nowrap}
+/* while sliding: the name of the slot under your thumb, beside the notch */
+.rl-tip{position:absolute;top:calc(var(--slot) / 2 - 17px);height:34px;padding:0 14px;display:flex;align-items:center;border-radius:17px;background:#000;color:#fff;
+  font:500 14px/1 var(--font);white-space:nowrap;opacity:0;transition:opacity .15s,transform .18s cubic-bezier(.2,.9,.25,1.1);pointer-events:none}
+body[data-hand="right"] .rl-tip{right:calc(var(--w) + 10px)}
+body[data-hand="left"] .rl-tip{left:calc(var(--w) + 10px)}
+body.rail-drag .rl-tip{opacity:1}
+/* the page makes room on the notch's side; the leaving page during a switch */
+body[data-hand="right"] .app{padding-right:calc(var(--rail-room,62px) + env(safe-area-inset-right,0px))!important}
+body[data-hand="left"] .app{padding-left:calc(var(--rail-room,62px) + env(safe-area-inset-left,0px))!important}
+body[data-hand="right"] .fin-scroll{margin-right:-4px!important;padding-right:4px!important}
+body[data-hand="left"] .fin-scroll{margin-left:-4px!important;padding-left:4px!important}
+body[data-hand="left"] .fa-bar{left:calc(var(--rail-room,62px) + 4px)}
+.fa-ghost{position:absolute;z-index:1;pointer-events:none;overflow:hidden}
+/* the hand setting in the menu */
+.fa-hand{display:flex;flex-direction:column;gap:8px;padding:12px 16px 4px}
+.fa-hand-lab{font:400 13px/1 var(--font);color:var(--ink-2)}
+.fa-hand-seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.fa-hand-seg button{flex:1;min-height:38px;border:0;border-radius:999px;background:none;color:#fff;font:500 14px/1 var(--font);cursor:pointer}
+.fa-hand-seg button[aria-checked="true"]{background:#fff;color:#0f3a44}
+.fa-hand-note{font:400 12px/1.3 var(--font);color:var(--ink-2)}
+
 /* add, bottom right, coral */
 .fa-fab{position:absolute;z-index:10;right:max(18px,env(safe-area-inset-right,0px));top:calc(var(--appH,100dvh) - var(--envB) - 76px);bottom:auto;
   width:62px;height:62px;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;cursor:pointer;
@@ -101,6 +149,8 @@ body.menu-on .fa-side{transform:none;visibility:visible}
 .fa-fab .i{width:26px;height:26px;stroke-width:1.8}
 .fa-fab:active{transform:scale(.94)}
 body.menu-on .fa-fab{visibility:hidden}
+/* the + follows the notch to the thumb's side */
+body[data-hand="left"] .fa-fab{right:auto;left:max(18px,env(safe-area-inset-left,0px))}
 .toast{position:absolute!important;bottom:auto!important;top:calc(var(--appH,100dvh) - var(--envB) - 136px)!important;border-radius:22px!important;font-family:var(--font)!important;text-transform:none!important;letter-spacing:0!important}
 
 /* Activity: every charge as a row. A stripe in its category's color down the left edge (--c), so categories can be
