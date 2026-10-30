@@ -176,62 +176,7 @@
       view.animate([{ transform: `translateY(${dir * 100}%)`, opacity: 0.3 }, { transform: 'none', opacity: 1 }], { duration: 480, easing: 'cubic-bezier(.2,.85,.25,1)' });
     }
   }
-  window.FIN_GOTO = goTo; // for the test kit
 
-  /* ---------- which hand: the tilt picks the side ----------
-     Walking with the phone in your right hand, it leans left (screen turned toward you): the tab goes right, under your
-     thumb. In your left hand it leans right: the tab goes left. The lean has to hold about a second before it moves,
-     and a phone lying flat changes nothing. Auto, Left or Right is set in the sidebar (localStorage fin.hand). */
-  const HAND = { mode: 'auto', side: 'right', motion: 'off' };
-  try { HAND.mode = localStorage.getItem('fin.hand') || 'auto'; HAND.side = localStorage.getItem('fin.side') || 'right'; } catch (e) {}
-  function applyHand() {
-    const side = HAND.mode === 'auto' ? HAND.side : HAND.mode;
-    document.body.dataset.hand = side;
-    for (const b of document.querySelectorAll('.fa-hand-seg button')) b.setAttribute('aria-checked', String(b.dataset.hand === HAND.mode));
-    const note = $('#handNote');
-    note.textContent = HAND.mode !== 'auto' ? `Always on the ${HAND.mode}.`
-      : HAND.motion === 'on' ? `Follows your hand: now on the ${side}.`
-      : HAND.motion === 'ask' ? 'Tap anywhere once to let it follow your hand.'
-      : HAND.motion === 'denied' ? 'Motion access is off in Settings, so it stays on the ' + side + '.'
-      : 'This device has no tilt sensor, so it stays on the ' + side + '.';
-  }
-  let ema = 0, leanSince = 0, leanTo = null;
-  function onTilt(e) {
-    if (e.gamma == null) return;
-    if (HAND.motion !== 'on') { HAND.motion = 'on'; applyHand(); }
-    if (Math.abs(e.beta == null ? 90 : e.beta) < 15) { leanTo = null; return; } // lying flat: no hand to read
-    ema = ema * 0.85 + e.gamma * 0.15;
-    const now = Date.now(), want = ema <= -12 ? 'right' : ema >= 12 ? 'left' : null; // leaning left = right hand
-    if (want !== leanTo) { leanTo = want; leanSince = now; return; }
-    if (want && want !== HAND.side && now - leanSince >= 900) {
-      HAND.side = want;
-      try { localStorage.setItem('fin.side', want); } catch (e2) {}
-      if (HAND.mode === 'auto') applyHand();
-    }
-  }
-  let listening = false;
-  const listen = () => { if (!listening) { listening = true; addEventListener('deviceorientation', onTilt); } };
-  function startMotion() {
-    if (typeof DeviceOrientationEvent === 'undefined') { HAND.motion = 'none'; return applyHand(); }
-    // Listen right away: where access was already given, readings simply start arriving. iOS asks only from a tap, so
-    // while no reading has come, the first tap anywhere asks.
-    listen();
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      HAND.motion = 'ask'; applyHand();
-      const ask = () => {
-        if (HAND.motion !== 'ask') return;
-        DeviceOrientationEvent.requestPermission().then(r => { if (r !== 'granted') HAND.motion = 'denied'; applyHand(); }).catch(() => {});
-      };
-      addEventListener('pointerup', ask, { once: true });
-    } else applyHand();
-  }
-  for (const b of document.querySelectorAll('.fa-hand-seg button')) b.onclick = () => {
-    HAND.mode = b.dataset.hand;
-    try { localStorage.setItem('fin.hand', HAND.mode); } catch (e) {}
-    applyHand();
-  };
-  applyHand();
-  startMotion();
 
   // the sidebar: every section, and Sign out at the bottom. It slides in over the page from the left.
   function setMenu(open) {
